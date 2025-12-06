@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { TripSearchInput, TripPlan } from './types';
-import { formatCurrency } from './utils';
+import { useState } from "react";
+import { TripSearchInput, TripPlan } from "./types";
+import { formatCurrency } from "./utils";
 
 export default function Home() {
   // Form state
-  const [origin, setOrigin] = useState('');
-  const [destination, setDestination] = useState('');
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
   const [travelers, setTravelers] = useState(1);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   // UI state
   const [loading, setLoading] = useState(false);
@@ -21,6 +21,7 @@ export default function Home() {
   /**
    * Handle trip search form submission
    */
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -37,34 +38,31 @@ export default function Home() {
       };
 
       // Call the plan API to generate trip
-      const response = await fetch('/api/plan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(searchInput),
-      });
+      console.log("starting api call");
+
+      const response = await fetch("https://localhost:5000");
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to generate trip plan');
+        throw new Error(errorData.error || "Failed to generate trip plan");
       }
 
       const plan = await response.json();
+      console.log(plan);
+
       setTripPlan(plan);
 
       // Store in sessionStorage for success page
-      sessionStorage.setItem('tripPlan', JSON.stringify(plan));
-      sessionStorage.setItem('searchInput', JSON.stringify(searchInput));
+      sessionStorage.setItem("tripPlan", JSON.stringify(plan));
+      sessionStorage.setItem("searchInput", JSON.stringify(searchInput));
 
       // Scroll to results
       setTimeout(() => {
-        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById("results")?.scrollIntoView({ behavior: "smooth" });
       }, 100);
-
     } catch (err) {
-      console.error('Search error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to search trips');
+      console.error("Search error:", err);
+      setError(err instanceof Error ? err.message : "Failed to search trips");
     } finally {
       setLoading(false);
     }
@@ -81,10 +79,10 @@ export default function Home() {
 
     try {
       // Create Stripe Checkout Session
-      const response = await fetch('/api/pay', {
-        method: 'POST',
+      const response = await fetch("/api/pay", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           amount: tripPlan.totalPrice,
@@ -99,7 +97,7 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create payment session');
+        throw new Error("Failed to create payment session");
       }
 
       const { url } = await response.json();
@@ -108,12 +106,11 @@ export default function Home() {
       if (url) {
         window.location.href = url;
       } else {
-        throw new Error('No checkout URL returned');
+        throw new Error("No checkout URL returned");
       }
-
     } catch (err) {
-      console.error('Payment error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to process payment');
+      console.error("Payment error:", err);
+      setError(err instanceof Error ? err.message : "Failed to process payment");
       setPaymentLoading(false);
     }
   };
@@ -137,7 +134,7 @@ export default function Home() {
         {/* Search Form */}
         <div className="bg-white rounded-lg shadow-lg p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Where do you want to go?</h2>
-          
+
           <form onSubmit={handleSearch} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-black">
               {/* Origin */}
@@ -183,7 +180,7 @@ export default function Home() {
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
                   required
-                  min={new Date().toISOString().split('T')[0]}
+                  min={new Date().toISOString().split("T")[0]}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
                 />
               </div>
@@ -199,7 +196,7 @@ export default function Home() {
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
                   required
-                  min={startDate || new Date().toISOString().split('T')[0]}
+                  min={startDate || new Date().toISOString().split("T")[0]}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
                 />
               </div>
@@ -329,19 +326,13 @@ export default function Home() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">{tripPlan.hotel.name}</h3>
                   <p className="text-gray-600 mb-3">{tripPlan.hotel.address}</p>
                   <div className="flex items-center gap-4">
-                    <span className="text-yellow-500 font-semibold">
-                      {tripPlan.hotel.rating} ⭐
-                    </span>
-                    <span className="text-gray-600">
-                      {formatCurrency(tripPlan.hotel.pricePerNight)} / night
-                    </span>
+                    <span className="text-yellow-500 font-semibold">{tripPlan.hotel.rating} ⭐</span>
+                    <span className="text-gray-600">{formatCurrency(tripPlan.hotel.pricePerNight)} / night</span>
                   </div>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-gray-600">Total (Hotel)</p>
-                  <p className="text-2xl font-bold text-indigo-600">
-                    {formatCurrency(tripPlan.hotel.totalPrice)}
-                  </p>
+                  <p className="text-2xl font-bold text-indigo-600">{formatCurrency(tripPlan.hotel.totalPrice)}</p>
                 </div>
               </div>
             </div>
@@ -378,13 +369,11 @@ export default function Home() {
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">Total Price</h2>
                   <p className="text-gray-600 text-sm mt-1">
-                    Including flights ({travelers} traveler{travelers > 1 ? 's' : ''}) and hotel
+                    Including flights ({travelers} traveler{travelers > 1 ? "s" : ""}) and hotel
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-4xl font-bold text-indigo-600">
-                    {formatCurrency(tripPlan.totalPrice)}
-                  </p>
+                  <p className="text-4xl font-bold text-indigo-600">{formatCurrency(tripPlan.totalPrice)}</p>
                 </div>
               </div>
 
@@ -406,9 +395,7 @@ export default function Home() {
                 )}
               </button>
 
-              <p className="text-center text-xs text-gray-500 mt-4">
-                Secure payment powered by Stripe (Test Mode)
-              </p>
+              <p className="text-center text-xs text-gray-500 mt-4">Secure payment powered by Stripe (Test Mode)</p>
             </div>
           </div>
         )}
@@ -417,9 +404,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <p className="text-center text-gray-600 text-sm">
-            © 2025 AI Travel Agent
-          </p>
+          <p className="text-center text-gray-600 text-sm">© 2025 AI Travel Agent</p>
         </div>
       </footer>
     </div>
