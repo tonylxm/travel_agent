@@ -1,24 +1,25 @@
 "use client"
 
 export default function ItineraryTab({ tripData }: { tripData: any }) {
+  const itineraryText = tripData?.itinerary
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-foreground mb-4">Your Itinerary</h2>
         <p className="text-muted-foreground mb-6">
-          AI-generated day-by-day itinerary for your trip to {tripData?.destinations?.join(", ")}.
+          AI-generated day-by-day itinerary for your trip to {tripData?.destinations?.join(", ") }.
         </p>
 
-        <div className="space-y-4">
-          {[1, 2, 3].map((day) => (
-            <div key={day} className="border border-border rounded-lg p-4 bg-background">
-              <h3 className="font-semibold text-foreground">Day {day}</h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                Morning: Explore local attractions • Lunch: Traditional cuisine • Evening: Cultural experience
-              </p>
-            </div>
-          ))}
-        </div>
+        {itineraryText ? (
+          <div className="rounded-lg border border-border bg-background p-4 whitespace-pre-wrap text-sm leading-6 text-foreground">
+            {itineraryText}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+            Your itinerary will appear here after generation.
+          </div>
+        )}
       </div>
     </div>
   )
