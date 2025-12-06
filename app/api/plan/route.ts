@@ -81,31 +81,83 @@ export async function POST(req: NextRequest) {
     };
 
     // Use OpenAI to generate day-by-day itinerary
+    // Mock OpenAI call for now - original call commented out
+    /*
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
+      {
+        role: 'system',
+        content: `You are a travel planning assistant. Generate a realistic ${days}-day itinerary for ${destination}. 
+        Return ONLY a JSON array with this exact structure:
+        [
         {
-          role: 'system',
-          content: `You are a travel planning assistant. Generate a realistic ${days}-day itinerary for ${destination}. 
-          Return ONLY a JSON array with this exact structure:
-          [
-            {
-              "day": 1,
-              "title": "Arrival & Exploration",
-              "activities": ["Activity 1", "Activity 2", "Activity 3"]
-            }
-          ]
-          
-          Each day should have 3-4 activities. Be specific to ${destination}. Make it exciting and realistic.`,
-        },
-        {
-          role: 'user',
-          content: `Create a ${days}-day itinerary for ${travelers} traveler(s) visiting ${destination} from ${startDate} to ${endDate}.`,
-        },
+          "day": 1,
+          "title": "Arrival & Exploration",
+          "activities": ["Activity 1", "Activity 2", "Activity 3"]
+        }
+        ]
+        
+        Each day should have 3-4 activities. Be specific to ${destination}. Make it exciting and realistic.`,
+      },
+      {
+        role: 'user',
+        content: `Create a ${days}-day itinerary for ${travelers} traveler(s) visiting ${destination} from ${startDate} to ${endDate}.`,
+      },
       ],
       temperature: 0.8,
       max_tokens: 1000,
     });
+    */
+
+    // Mocked response to simulate OpenAI output
+    const mockedItinerary = Array.from({ length: days }, (_, i) => {
+      const dayNum = i + 1;
+      const isArrival = i === 0;
+      const isDeparture = i === days - 1;
+      const title = isArrival
+      ? 'Arrival & Exploration'
+      : isDeparture
+      ? 'Departure Day'
+      : `Day ${dayNum} Exploration`;
+
+      const activities = isArrival
+      ? [
+        `Arrive in ${destination} and check into hotel`,
+        `Lunch at a popular local spot in ${destination}`,
+        `Afternoon walking tour of downtown ${destination}`,
+        `Dinner at a recommended restaurant`,
+        ]
+      : isDeparture
+      ? [
+        `Breakfast at the hotel`,
+        `Last-minute shopping or stroll in ${destination}`,
+        `Check out and transfer to the airport`,
+        ]
+      : [
+        `Breakfast at a local cafe in ${destination}`,
+        `Visit a top attraction in ${destination}`,
+        `Lunch at a well-rated local restaurant`,
+        `Evening cultural activity or show`,
+        ];
+
+      return {
+      day: dayNum,
+      title,
+      activities,
+      };
+    });
+
+    // Provide the same shape the code expects from OpenAI
+    const completion: any = {
+      choices: [
+      {
+        message: {
+        content: JSON.stringify(mockedItinerary),
+        },
+      },
+      ],
+    };
 
     // Parse the AI response
     let itinerary: DayItinerary[] = [];
