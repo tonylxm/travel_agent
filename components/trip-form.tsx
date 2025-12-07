@@ -16,6 +16,7 @@ interface TripFormData {
   budget: number
   travelers: number
   interests: string[]
+  itinerary?: string
 }
 
 const interests = [
@@ -42,6 +43,9 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
     interests: [],
   })
 
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const handleAddDestination = () => {
     setFormData({
       ...formData,
@@ -64,9 +68,50 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
     })
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      // Filter out empty destinations
+      const filteredDestinations = formData.destinations.filter((d) => d.trim() !== "")
+
+      if (filteredDestinations.length === 0) {
+        setError("Please enter at least one destination")
+        setIsLoading(false)
+        return
+      }
+
+      const response = await fetch("/api/generate-itinerary", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...formData,
+          destinations: filteredDestinations,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to generate itinerary")
+      }
+
+      const data = await response.json()
+      onSubmit({
+        ...formData,
+        destinations: filteredDestinations,
+        itinerary: data.itinerary,
+      })
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "An error occurred"
+      setError(errorMessage)
+      console.error("Error generating itinerary:", err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -187,11 +232,16 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
 
             {/* Submit */}
             <div className="flex gap-4">
-              <Button type="submit" size="lg" className="flex-1">
-                Generate Itinerary
+              {error && (
+                <div className="col-span-full rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
+                  {error}
+                </div>
+              )}
+              <Button type="submit" size="lg" className="flex-1" disabled={isLoading}>
+                {isLoading ? "Generating..." : "Generate Itinerary"}
               </Button>
               <Link href="/">
-                <Button variant="outline" size="lg">
+                <Button variant="outline" size="lg" disabled={isLoading}>
                   Back
                 </Button>
               </Link>
