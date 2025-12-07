@@ -30,7 +30,6 @@ You must also:
 - Split activities into "free" and "paid"
 - Identify realistic price ranges for all paid activities (just use New Zealand dollars for everything)
 - Recommend booking sources ONLY from this list: ["GetYourGuide", "Viator", "Klook", "TripAdvisor", "Local operator"]
-- Provide 0–3 example links per provider (no fabricated URLs; use generic placeholders such as "viator.com/example")
 - Include adventure/outdoor options where relevant
 - If multiple destinations are provided, group activities by destination
 - Avoid making up specific tour companies unless they are household names
@@ -50,7 +49,7 @@ If information is missing, make reasonable assumptions and state them in the \`a
           "name": string,
           "description": string,
           "category": string,
-          "why_it_matches": string,
+          "why_it_matches_you": string,
           "estimated_cost": {
             "currency": string,
             "range": string
@@ -62,8 +61,7 @@ If information is missing, make reasonable assumptions and state them in the \`a
           "deal_sources": [
             {
               "provider_name": "GetYourGuide" | "Viator" | "Klook" | "TripAdvisor" | "Local operator",
-              "provider_type": "OTA" | "local_operator",
-              "example_links": string[],
+              "provider_type": "OTA" | "",
               "typical_price_notes": string
             }
           ],
@@ -128,7 +126,7 @@ ${ACTIVITIES_PROMPT}`
               name: "City Walking Tour",
               description: "Explore the historic city center on foot",
               category: "Culture",
-              why_it_matches: "Matches your interest in Culture and History",
+              why_it_matches_you: "Matches your interest in Culture and History",
               estimated_cost: {
                 currency: "NZD",
                 range: "Free",

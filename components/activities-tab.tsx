@@ -3,9 +3,8 @@
 import { useState, useEffect, useContext } from "react"
 import type { ActivitiesResponse, Activity, Theme } from "@/lib/types/activities"
 import ThemeSection from "@/components/theme-section"
-import ActivityCard from "@/components/activity-card"
 import { Button } from "@/components/ui/button"
-import { Loader2, AlertCircle, Filter, Star, Info } from "lucide-react"
+import { Loader2, AlertCircle, Filter, Info } from "lucide-react"
 import TripContext from "@/contexts/trip-context"
 
 interface ActivitiesTabProps {
@@ -143,15 +142,6 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
       .filter((theme) => theme.activities.length > 0)
   }
 
-  const getTopPicksActivities = (): Activity[] => {
-    if (!activitiesData || activitiesData.top_picks.length === 0) return []
-
-    const allActivities = activitiesData.themes.flatMap((theme) => theme.activities)
-    return activitiesData.top_picks
-      .map((pickName) => allActivities.find((activity) => activity.name === pickName))
-      .filter((activity): activity is Activity => activity !== undefined)
-  }
-
   const getAllCategories = (): string[] => {
     if (!activitiesData) return []
     const categories = new Set<string>()
@@ -164,7 +154,6 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
   }
 
   const filteredThemes = getFilteredAndSortedThemes()
-  const topPicks = getTopPicksActivities()
   const categories = getAllCategories()
 
   if (loading) {
@@ -206,16 +195,12 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <div>
+      <div>
           <h2 className="text-2xl font-semibold text-foreground mb-2">Recommended Activities</h2>
           <p className="text-muted-foreground">
-            {activitiesData.destination && (
-              <>
-                Activities for <span className="font-medium text-foreground">{activitiesData.destination}</span>
-              </>
-            )}
             {tripData?.interests && tripData.interests.length > 0 && (
-              <> • Based on your interests: {tripData.interests.join(", ")}</>
+              <> 
+                Based on your interests in {tripData.interests.join(", ").toLowerCase()}.</>
             )}
           </p>
         </div>
@@ -246,7 +231,7 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
         <div className="rounded-lg border border-accent/20 bg-accent/5 p-4">
           <div className="flex items-start gap-2">
             <Info className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
-            <div>
+              <div>
               <p className="text-sm font-medium text-foreground mb-1">Assumptions Made</p>
               <ul className="text-sm text-muted-foreground space-y-1">
                 {activitiesData.assumptions.map((assumption, idx) => (
@@ -258,31 +243,14 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
         </div>
       )}
 
-      {/* Top Picks Section */}
-      {topPicks.length > 0 && (
-        <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Star className="h-5 w-5 text-primary fill-primary" />
-            <h3 className="text-lg font-semibold text-foreground">Top Picks</h3>
-          </div>
-          <div className="space-y-4">
-            {topPicks.map((activity, idx) => (
-              <ActivityCard key={idx} activity={activity} />
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Filters and Sort */}
       <div className="flex flex-wrap items-center gap-3 p-4 rounded-lg border border-border bg-muted/30">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <span className="text-sm font-medium text-foreground">Filter:</span>
-          {(filterType !== "all" || selectedCategory !== "all") && (
-            <span className="text-xs text-muted-foreground">
-              ({filteredThemes.reduce((sum, theme) => sum + theme.activities.length, 0)} activities)
-            </span>
-          )}
+          <span className="text-xs text-muted-foreground">
+            ({filteredThemes.reduce((sum, theme) => sum + theme.activities.length, 0)} activities)
+          </span>
         </div>
         <div className="flex gap-2">
           {(["all", "free", "paid"] as FilterType[]).map((type) => (
@@ -298,7 +266,7 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
         </div>
         {categories.length > 0 && (
           <>
-            <span className="text-sm text-muted-foreground mx-2">|</span>
+            <span className="text-sm text-muted-foreground mx-2"></span>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
@@ -313,7 +281,7 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
             </select>
           </>
         )}
-        <span className="text-sm text-muted-foreground mx-2">|</span>
+        <span className="text-sm text-muted-foreground mx-2"></span>
         <select
           value={sortOption}
           onChange={(e) => setSortOption(e.target.value as SortOption)}

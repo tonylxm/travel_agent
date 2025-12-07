@@ -10,7 +10,6 @@ export interface EstimatedCost {
 export interface DealSource {
   provider_name: ProviderName
   provider_type: ProviderType
-  example_links: string[]
   typical_price_notes: string
 }
 
@@ -19,7 +18,7 @@ export interface Activity {
   name: string
   description: string
   category: string
-  why_it_matches: string
+  why_it_matches_you: string
   estimated_cost: EstimatedCost
   duration_hours: number
   location: string

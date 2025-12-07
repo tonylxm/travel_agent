@@ -1,7 +1,7 @@
 "use client"
 
 import type { Activity } from "@/lib/types/activities"
-import { ExternalLink, Clock, MapPin, Calendar, DollarSign } from "lucide-react"
+import { Clock, MapPin, DollarSign } from "lucide-react"
 
 interface ActivityCardProps {
   activity: Activity
@@ -11,93 +11,79 @@ export default function ActivityCard({ activity }: ActivityCardProps) {
   const isFree = activity.type === "free"
 
   return (
-    <div className="border border-border rounded-lg p-5 bg-background hover:bg-muted/50 transition-all">
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="font-semibold text-foreground text-lg">{activity.name}</h3>
-            <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${
-                isFree
-                  ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                  : "bg-primary/10 text-primary"
-              }`}
-            >
-              {isFree ? "Free" : "Paid"}
-            </span>
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
-              {activity.category}
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground mb-3">{activity.description}</p>
-          <p className="text-xs text-accent italic mb-3">💡 {activity.why_it_matches}</p>
+    <div className="border border-border rounded-lg p-4 bg-background hover:bg-muted/50 transition-all">
+      {/* Title and Badges */}
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h3 className="font-semibold text-foreground text-lg flex-1">{activity.name}</h3>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          <span
+            className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+              isFree
+                ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                : "bg-primary/10 text-primary"
+            }`}
+          >
+            {isFree ? "Free" : "Paid"}
+          </span>
+          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+            {activity.category}
+          </span>
         </div>
       </div>
 
-      {/* Activity Details Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      {/* Description */}
+      <p className="text-sm text-muted-foreground mb-2">{activity.description}</p>
+
+      {/* Why it matches - highlighted */}
+      <p className="text-xs text-green-600 dark:text-green-400 italic mb-3">💡 {activity.why_it_matches_you}</p>
+
+      {/* Key Details - Compact Row */}
+      <div className="flex items-center gap-4 mb-3 flex-wrap">
         {!isFree && (
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-1.5">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
-            <span className="text-foreground font-medium">
+            <span className="text-sm text-foreground font-medium">
               {activity.estimated_cost.range} {activity.estimated_cost.currency}
             </span>
           </div>
         )}
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-1.5">
           <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">{activity.duration_hours} hours</span>
+          <span className="text-sm text-muted-foreground">{activity.duration_hours} hours</span>
         </div>
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-1.5">
           <MapPin className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground truncate">{activity.location}</span>
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <span className="text-muted-foreground">{activity.best_time_to_visit}</span>
+          <span className="text-sm text-muted-foreground truncate max-w-[200px]">{activity.location}</span>
         </div>
       </div>
 
-      {/* Booking Sources */}
+      {/* Booking Sources - Condensed */}
       {activity.deal_sources.length > 0 && (
-        <div className="mb-3 pt-3 border-t border-border">
-          <p className="text-xs font-medium text-muted-foreground mb-2">Book through:</p>
+        <div className="pt-3 border-t border-border">
+          <p className="text-xs font-medium text-muted-foreground mb-1.5">Book through:</p>
           <div className="flex flex-wrap gap-2">
             {activity.deal_sources.map((source, idx) => (
-              <div key={idx} className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-foreground">{source.provider_name}</span>
+              <div key={idx} className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-foreground">{source.provider_name}</span>
+                {source.provider_type && source.provider_type !== "local_operator" && (
                   <span className="text-xs text-muted-foreground">({source.provider_type})</span>
-                </div>
-                {source.example_links.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {source.example_links.map((link, linkIdx) => (
-                      <a
-                        key={linkIdx}
-                        href={`https://${link}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs text-accent hover:underline flex items-center gap-1"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        {link}
-                      </a>
-                    ))}
-                  </div>
                 )}
                 {source.typical_price_notes && (
-                  <p className="text-xs text-muted-foreground italic">{source.typical_price_notes}</p>
-                )}
+  <>
+    <span className="text-xs text-muted-foreground italic">•</span>
+    <span className="text-xs text-muted-foreground italic ml-1">{source.typical_price_notes}</span>
+    </>
+    )} 
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Additional Info */}
-      <div className="flex flex-col gap-2 pt-3 border-t border-border">
+      {/* Additional Info - Compact */}
+      <div className="flex items-center gap-3 pt-2 mt-2 border-t border-border">
         {activity.booking_required && (
-          <p className="text-xs text-amber-600 dark:text-amber-400">⚠️ Booking required in advance</p>
+          <p className="text-xs text-amber-600 dark:text-amber-400">⚠️ Booking required</p>
         )}
         {activity.accessibility_notes && (
           <p className="text-xs text-muted-foreground">♿ {activity.accessibility_notes}</p>
