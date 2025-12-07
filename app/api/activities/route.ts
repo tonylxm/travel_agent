@@ -8,6 +8,7 @@ interface TripData {
   budget: number
   travelers: number
   interests: string[]
+  additionalInformation?: string
 }
 
 const ACTIVITIES_PROMPT = `For the activities page, you generate highly relevant, budget-aware activities for a user's trip. 
@@ -98,15 +99,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Build the prompt with trip data
-    const userPrompt = `Generate activities for:
+    let userPrompt = `Generate activities for:
 - Destination(s): ${tripData.destinations.join(", ")}
 - Trip dates: ${tripData.startDate} to ${tripData.endDate} (${days} days)
 - Budget: ${budgetLevel} ($${dailyBudget.toFixed(0)} per person per day, total: $${tripData.budget})
 - Number of travelers: ${tripData.travelers}
 - Interests: ${tripData.interests.join(", ") || "General travel"}
-- Origin: ${tripData.origin}
+- Origin: ${tripData.origin}`
 
-${ACTIVITIES_PROMPT}`
+    if (tripData.additionalInformation && tripData.additionalInformation.trim()) {
+      userPrompt += `\n- Additional Information: ${tripData.additionalInformation}`
+    }
+
+    userPrompt += `\n\n${ACTIVITIES_PROMPT}`
 
     // TODO: Replace with actual AI agent call
     // For now, return a mock response structure

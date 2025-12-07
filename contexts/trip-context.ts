@@ -9,6 +9,7 @@ interface TripData {
   budget?: number
   travelers?: number
   interests?: string[]
+  additionalInformation?: string
   activities?: ActivitiesResponse
 }
 

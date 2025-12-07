@@ -16,6 +16,7 @@ interface TripFormData {
   budget: number
   travelers: number
   interests: string[]
+  additionalInformation?: string
   itinerary?: string
 }
 
@@ -41,6 +42,7 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
     budget: 5000,
     travelers: 1,
     interests: [],
+    additionalInformation: "",
   })
 
   const [isLoading, setIsLoading] = useState(false)
@@ -129,7 +131,7 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Departure City</label>
               <Input
-                placeholder="e.g., San Francisco"
+                placeholder="eg. San Francisco"
                 value={formData.origin}
                 onChange={(e) => setFormData({ ...formData, origin: e.target.value })}
                 required
@@ -228,6 +230,19 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Additional Information */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Anything else we should know? (eg. special plans, dietary requirements)
+              </label>
+              <textarea
+                value={formData.additionalInformation || ""}
+                onChange={(e) => setFormData({ ...formData, additionalInformation: e.target.value })}
+                placeholder="e.g., Vegetarian diet, celebrating anniversary, need wheelchair accessible venues..."
+                className="w-full min-h-[100px] px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
             </div>
 
             {/* Submit */}

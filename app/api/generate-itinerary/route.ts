@@ -8,7 +8,7 @@ const openai = new OpenAI({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { origin, destinations, startDate, endDate, budget, travelers, interests } = body
+    const { origin, destinations, startDate, endDate, budget, travelers, interests, additionalInformation } = body
 
     // Validate required fields
     if (!origin || !destinations?.length || !startDate || !endDate || !budget || !travelers) {
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create a structured prompt for OpenAI
-    const prompt = `Create a detailed travel itinerary based on the following information:
+    let prompt = `Create a detailed travel itinerary based on the following information:
 
 Departure City: ${origin}
 Destinations: ${destinations.join(", ")}
@@ -27,9 +27,13 @@ Start Date: ${startDate}
 End Date: ${endDate}
 Total Budget: $${budget}
 Number of Travelers: ${travelers}
-Interests: ${interests.join(", ")}
+Interests: ${interests.join(", ")}`
 
-Please provide a comprehensive day-by-day itinerary including:
+    if (additionalInformation && additionalInformation.trim()) {
+      prompt += `\nAdditional Information: ${additionalInformation}`
+    }
+
+    prompt += `\n\nPlease provide a comprehensive day-by-day itinerary including:
 1. Suggested daily activities based on their interests
 2. Recommended restaurants and dining experiences
 3. Accommodation suggestions (budget-conscious to mid-range)
@@ -67,6 +71,7 @@ Format the response as a structured itinerary that can be easily parsed and disp
         budget,
         travelers,
         interests,
+        additionalInformation,
       },
     })
   } catch (error) {
