@@ -13,6 +13,7 @@ interface HotelDetailsProps {
     property_token?: string
     serpapi_property_details_link?: string
     gps_coordinates?: { latitude: number; longitude: number }
+    address?: string
     hotel_class?: number
     thumbnail?: string
     overall_rating?: number
@@ -103,14 +104,12 @@ export default function HotelDetails({
         {/* Main Content */}
         <div className="md:col-span-2 space-y-6">
           {/* Location */}
-          {hotel.gps_coordinates && (
+          {hotel.address && (
             <div className="flex items-start gap-2">
               <MapPin className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-medium text-foreground">Location</p>
-                <p className="text-sm text-muted-foreground">
-                  Coordinates: {hotel.gps_coordinates.latitude.toFixed(4)}, {hotel.gps_coordinates.longitude.toFixed(4)}
-                </p>
+                <p className="text-sm text-muted-foreground">{hotel.address}</p>
               </div>
             </div>
           )}

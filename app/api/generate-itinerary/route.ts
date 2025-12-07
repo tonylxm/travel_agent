@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import OpenAI from "openai"
+import type { Location } from "@/lib/types/location"
+import { formatLocation } from "@/lib/types/location"
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -18,11 +20,17 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Format locations for prompt
+    const originFormatted = typeof origin === "object" ? formatLocation(origin as Location) : origin
+    const destinationsFormatted = destinations.map((dest: Location | string) =>
+      typeof dest === "object" ? formatLocation(dest as Location) : dest
+    )
+
     // Create a structured prompt for OpenAI
     let prompt = `Create a detailed travel itinerary based on the following information:
 
-Departure City: ${origin}
-Destinations: ${destinations.join(", ")}
+Departure City: ${originFormatted}
+Destinations: ${destinationsFormatted.join(", ")}
 Start Date: ${startDate}
 End Date: ${endDate}
 Total Budget: $${budget}

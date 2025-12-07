@@ -3,11 +3,14 @@
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Calendar, Clock, MapPin, Plane } from "lucide-react"
 import { useBooking } from "@/contexts/booking-context"
+import { formatLocationForDisplay } from "@/lib/utils/format-location"
 
 interface FlightDetailsProps {
   tripData?: {
     startDate?: string
     endDate?: string
+    origin?: any
+    destinations?: any[]
   }
   onBack: () => void
   onBookWithAI: () => void
@@ -16,145 +19,306 @@ interface FlightDetailsProps {
 export default function FlightDetails({ tripData, onBack, onBookWithAI }: FlightDetailsProps) {
   const { selectedFlight } = useBooking()
 
-  // Hardcoded flight details (based on selected flight)
-  // In a real app, these would come from the selected flight data
-  const flightDetails = {
-    airline: "Air New Zealand",
-    flightNumber: "NZ89",
-    departureAirport: "Auckland (AKL)",
-    arrivalAirport: "Tokyo (NRT)",
-    departureDate: "2025-01-13",
-    departureTime: "10:05",
-    arrivalDate: "2025-01-14",
-    arrivalTime: "18:30",
-    duration: "10h 25m",
-    cabin: "Economy",
-    price: selectedFlight?.price || 850,
+  if (!selectedFlight) {
+    return (
+      <div className="space-y-6">
+        <Button variant="ghost" onClick={onBack} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Flights
+        </Button>
+        <p className="text-muted-foreground">No flight selected</p>
+      </div>
+    )
   }
 
-  // Calculate total duration from flight path if available
-  let totalDuration = "10h 25m"
-  if (selectedFlight?.flights) {
-    const totalMinutes = selectedFlight.flights.reduce(
-      (sum: number, flight: any) => sum + flight.duration,
+  // Check if it's a package (multi-destination) or single flight
+  const isPackage = selectedFlight.segments && selectedFlight.segments.length > 0
+  const cabin = selectedFlight.cabin || "Economy"
+  const totalPrice = selectedFlight.price || 0
+
+  // For single destination flights
+  if (!isPackage && selectedFlight.flights && selectedFlight.flights.length > 0) {
+    const firstFlight = selectedFlight.flights[0]
+    const totalDuration = selectedFlight.flights.reduce(
+      (sum: number, flight: any) => sum + (flight.duration || 0),
       0
     )
-    totalDuration = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`
+
+    return (
+      <div className="space-y-6">
+        {/* Back Button */}
+        <Button variant="ghost" onClick={onBack} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Flights
+        </Button>
+
+        {/* Flight Header */}
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Flight Details</h1>
+            <p className="text-muted-foreground">Review your selected flight before booking</p>
+          </div>
+        </div>
+
+        {/* Flight Information Card */}
+        <div className="border border-border rounded-lg p-6 bg-card space-y-6">
+          {/* Flight Route */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <Plane className="h-5 w-5 text-primary" />
+                <span className="font-semibold text-foreground">
+                  {firstFlight.airline || "Airline"} {firstFlight.flightNumber || "N/A"}
+                </span>
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                  {cabin}
+                </span>
+              </div>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-foreground">
+                    {firstFlight.departure_airport?.name || "N/A"}
+                  </span>
+                </div>
+                <span className="text-muted-foreground">→</span>
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-foreground">
+                    {firstFlight.arrival_airport?.name || "N/A"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Flight Times */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>Departure</span>
+              </div>
+              <p className="text-lg font-semibold text-foreground">
+                {firstFlight.departure_date || "N/A"} at {firstFlight.departure_time || "N/A"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {firstFlight.departure_airport?.name || "N/A"}
+              </p>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                <span>Arrival</span>
+              </div>
+              <p className="text-lg font-semibold text-foreground">
+                {firstFlight.arrival_date || "N/A"} at {firstFlight.arrival_time || "N/A"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {firstFlight.arrival_airport?.name || "N/A"}
+              </p>
+            </div>
+          </div>
+
+          {/* Flight Duration */}
+          <div className="flex items-center gap-2 pt-4 border-t border-border">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Duration:</span>
+            <span className="font-medium text-foreground">
+              {Math.floor(totalDuration / 60)}h {totalDuration % 60}m
+            </span>
+          </div>
+
+          {/* Price */}
+          <div className="pt-4 border-t border-border">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Total Price</span>
+              <span className="text-2xl font-bold text-primary">${totalPrice}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4">
+          <Button variant="outline" onClick={onBack} className="flex-1">
+            Back to Flights
+          </Button>
+          <Button onClick={onBookWithAI} className="flex-1" size="lg">
+            Book with AI Agent
+          </Button>
+        </div>
+      </div>
+    )
   }
 
+  // For multi-destination packages
+  if (isPackage && selectedFlight.segments) {
+    const segments = selectedFlight.segments
+    const firstSegment = segments[0]
+    const lastSegment = segments[segments.length - 1]
+    const totalDuration = segments.reduce((sum: number, seg: any) => sum + (seg.duration || 0), 0)
+    
+    // Get origin from tripData or first segment
+    const origin = tripData?.origin 
+      ? formatLocationForDisplay(tripData.origin)
+      : (firstSegment.departure_airport?.name || firstSegment.from || "N/A")
+    
+    // Build destinations list
+    const destinations: string[] = []
+    segments.forEach((seg: any) => {
+      const dest = seg.arrival_airport?.name || seg.to
+      if (dest && !destinations.includes(dest)) {
+        destinations.push(dest)
+      }
+    })
+
+    return (
+      <div className="space-y-6">
+        {/* Back Button */}
+        <Button variant="ghost" onClick={onBack} className="mb-4">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Flights
+        </Button>
+
+        {/* Flight Header */}
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Flight Package Details</h1>
+            <p className="text-muted-foreground">Review your selected flight package before booking</p>
+          </div>
+        </div>
+
+        {/* Overall Journey Summary */}
+        <div className="border border-border rounded-lg p-6 bg-card space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Plane className="h-5 w-5 text-primary" />
+            <span className="font-semibold text-foreground">Overall Journey</span>
+            <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+              {cabin}
+            </span>
+          </div>
+          <div className="flex items-center gap-4 text-sm flex-wrap">
+            <div className="flex items-center gap-1">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium text-foreground">{origin}</span>
+            </div>
+            {destinations.map((dest, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                <span className="text-muted-foreground">→</span>
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-foreground">{dest}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 pt-2 border-t border-border">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Total Duration:</span>
+            <span className="font-medium text-foreground">
+              {Math.floor(totalDuration / 60)}h {totalDuration % 60}m
+            </span>
+          </div>
+        </div>
+
+        {/* Flight Segments */}
+        <div className="border border-border rounded-lg p-6 bg-card space-y-6">
+          <h2 className="text-xl font-semibold text-foreground">Flight Segments</h2>
+          {segments.map((segment: any, idx: number) => (
+            <div key={idx} className="space-y-4">
+              {idx > 0 && <div className="border-t border-border pt-4" />}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Plane className="h-5 w-5 text-primary" />
+                  <span className="font-semibold text-foreground">
+                    {segment.airline || "Airline"} {segment.flightNumber || "N/A"}
+                  </span>
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                    {cabin}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-sm mb-3">
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-foreground">
+                      {segment.departure_airport?.name || segment.from || "N/A"}
+                    </span>
+                  </div>
+                  <span className="text-muted-foreground">→</span>
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-foreground">
+                      {segment.arrival_airport?.name || segment.to || "N/A"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Segment Times */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>Departure</span>
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {segment.date || "N/A"} at {segment.departure_time || "N/A"}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>Arrival</span>
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {segment.date || "N/A"} at {segment.arrival_time || "N/A"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Duration:</span>
+                    <span className="text-sm font-medium text-foreground">
+                      {Math.floor((segment.duration || 0) / 60)}h {(segment.duration || 0) % 60}m
+                    </span>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">${segment.price || 0}</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Total Price */}
+        <div className="border border-border rounded-lg p-6 bg-card">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Total Package Price</span>
+            <span className="text-2xl font-bold text-primary">${totalPrice}</span>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-4">
+          <Button variant="outline" onClick={onBack} className="flex-1">
+            Back to Flights
+          </Button>
+          <Button onClick={onBookWithAI} className="flex-1" size="lg">
+            Book with AI Agent
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Fallback if no valid flight data
   return (
     <div className="space-y-6">
-      {/* Back Button */}
       <Button variant="ghost" onClick={onBack} className="mb-4">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Flights
       </Button>
-
-      {/* Flight Header */}
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Flight Details</h1>
-          <p className="text-muted-foreground">Review your selected flight before booking</p>
-        </div>
-      </div>
-
-      {/* Flight Information Card */}
-      <div className="border border-border rounded-lg p-6 bg-card space-y-6">
-        {/* Flight Route */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Plane className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-foreground">
-                {flightDetails.airline} {flightDetails.flightNumber}
-              </span>
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
-                {flightDetails.cabin}
-              </span>
-            </div>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium text-foreground">{flightDetails.departureAirport}</span>
-              </div>
-              <span className="text-muted-foreground">→</span>
-              <div className="flex items-center gap-1">
-                <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium text-foreground">{flightDetails.arrivalAirport}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Flight Times */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <span>Departure</span>
-            </div>
-            <p className="text-lg font-semibold text-foreground">
-              {flightDetails.departureDate} at {flightDetails.departureTime}
-            </p>
-            <p className="text-sm text-muted-foreground">{flightDetails.departureAirport}</p>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <span>Arrival</span>
-            </div>
-            <p className="text-lg font-semibold text-foreground">
-              {flightDetails.arrivalDate} at {flightDetails.arrivalTime}
-            </p>
-            <p className="text-sm text-muted-foreground">{flightDetails.arrivalAirport}</p>
-          </div>
-        </div>
-
-        {/* Flight Duration */}
-        <div className="flex items-center gap-2 pt-4 border-t border-border">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Duration:</span>
-          <span className="font-medium text-foreground">{totalDuration}</span>
-        </div>
-
-        {/* Multi-leg flights */}
-        {selectedFlight?.flights && selectedFlight.flights.length > 1 && (
-          <div className="pt-4 border-t border-border">
-            <p className="text-sm font-medium text-foreground mb-3">Flight Segments:</p>
-            <div className="space-y-3">
-              {selectedFlight.flights.map((flight: any, idx: number) => (
-                <div key={idx} className="pl-4 border-l-2 border-primary/20">
-                  <p className="text-sm text-foreground">
-                    {flight.departure_airport.name} → {flight.arrival_airport.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Duration: {Math.floor(flight.duration / 60)}h {flight.duration % 60}m
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Price */}
-        <div className="pt-4 border-t border-border">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Total Price</span>
-            <span className="text-2xl font-bold text-primary">${flightDetails.price}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-4">
-        <Button variant="outline" onClick={onBack} className="flex-1">
-          Back to Flights
-        </Button>
-        <Button onClick={onBookWithAI} className="flex-1" size="lg">
-          Book with AI Agent
-        </Button>
-      </div>
+      <p className="text-muted-foreground">Invalid flight data</p>
     </div>
   )
 }
-

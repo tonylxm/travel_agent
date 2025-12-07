@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Loader2, AlertCircle, Filter, Info } from "lucide-react"
 import TripContext from "@/contexts/trip-context"
 
+import type { Location } from "@/lib/types/location"
+
 interface ActivitiesTabProps {
   tripData: {
-    origin?: string
-    destinations?: string[]
+    origin?: Location | string | null
+    destinations?: (Location | string)[]
     startDate?: string
     endDate?: string
     budget?: number
@@ -46,7 +48,12 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
       fetchActivities()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tripData?.destinations?.join(","), tripData?.startDate, tripData?.endDate, tripData?.budget])
+  }, [
+    tripData?.destinations?.map((d) => (typeof d === "object" ? `${d.city}, ${d.country}` : d)).join(","),
+    tripData?.startDate,
+    tripData?.endDate,
+    tripData?.budget,
+  ])
 
   const fetchActivities = async (forceRefresh = false) => {
     if (!tripData?.destinations || tripData.destinations.length === 0) {
@@ -238,9 +245,9 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
                   <li key={idx}>• {assumption}</li>
                 ))}
               </ul>
+              </div>
+              </div>
             </div>
-          </div>
-        </div>
       )}
 
       {/* Filters and Sort */}
@@ -315,7 +322,7 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
           >
             Clear Filters
           </Button>
-        </div>
+      </div>
       )}
     </div>
   )

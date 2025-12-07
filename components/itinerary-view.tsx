@@ -9,6 +9,7 @@ import FlightsTab from "@/components/flights-tab"
 import AccommodationTab from "@/components/accommodation-tab"
 import ActivitiesTab from "@/components/activities-tab"
 import SummaryTab from "@/components/summary-tab"
+import { formatLocationsForDisplay, formatLocationForDisplay } from "@/lib/utils/format-location"
 
 export default function ItineraryView({ tripData, onNewTrip }: { tripData: any; onNewTrip: () => void }) {
   const [activeTab, setActiveTab] = useState("itinerary")
@@ -23,6 +24,12 @@ export default function ItineraryView({ tripData, onNewTrip }: { tripData: any; 
 
   const ActiveComponent = tabs.find((t) => t.id === activeTab)?.component || ItineraryTab
 
+  const originFormatted = formatLocationForDisplay(tripData?.origin)
+  const destinationsFormatted = formatLocationsForDisplay(tripData?.destinations)
+  const routeString = originFormatted 
+    ? `${originFormatted} → ${destinationsFormatted.join(" → ")}`
+    : destinationsFormatted.join(" → ")
+
   return (
     <>
       <Header />
@@ -32,7 +39,7 @@ export default function ItineraryView({ tripData, onNewTrip }: { tripData: any; 
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">{tripData?.destinations?.join(" → ")}</h1>
+                <h1 className="text-3xl font-bold text-foreground">{routeString}</h1>
                 <p className="mt-2 text-muted-foreground">
                   {tripData?.startDate} to {tripData?.endDate}
                 </p>

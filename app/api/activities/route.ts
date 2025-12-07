@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 
+import type { Location } from "@/lib/types/location"
+import { formatLocation } from "@/lib/types/location"
+
 interface TripData {
-  origin: string
-  destinations: string[]
+  origin: Location | string
+  destinations: (Location | string)[]
   startDate: string
   endDate: string
   budget: number
@@ -35,7 +38,7 @@ You must also:
 - If multiple destinations are provided, group activities by destination
 - Avoid making up specific tour companies unless they are household names
 
-If information is missing, make reasonable assumptions and state them in the \`assumptions\` field.
+If information is missing, make reasonable assumptions and state them in the \`assumptions\` field. IMPORTANT: When writing assumptions, always address the user directly using "You" (second person) instead of "the traveller" or "the traveler" (third person). For example, use "You prefer budget-friendly options" instead of "The traveller prefers budget-friendly options".
 
 --- JSON SCHEMA (required) ---
 {
@@ -98,14 +101,22 @@ export async function POST(request: NextRequest) {
       budgetLevel = "high"
     }
 
+    // Format locations for prompt
+    const destinationsFormatted = tripData.destinations.map((dest: Location | string) =>
+      typeof dest === "object" ? formatLocation(dest as Location) : dest
+    )
+    const originFormatted = typeof tripData.origin === "object" 
+      ? formatLocation(tripData.origin as Location) 
+      : tripData.origin
+
     // Build the prompt with trip data
     let userPrompt = `Generate activities for:
-- Destination(s): ${tripData.destinations.join(", ")}
+- Destination(s): ${destinationsFormatted.join(", ")}
 - Trip dates: ${tripData.startDate} to ${tripData.endDate} (${days} days)
 - Budget: ${budgetLevel} ($${dailyBudget.toFixed(0)} per person per day, total: $${tripData.budget})
 - Number of travelers: ${tripData.travelers}
 - Interests: ${tripData.interests.join(", ") || "General travel"}
-- Origin: ${tripData.origin}`
+- Origin: ${originFormatted}`
 
     if (tripData.additionalInformation && tripData.additionalInformation.trim()) {
       userPrompt += `\n- Additional Information: ${tripData.additionalInformation}`
@@ -116,8 +127,13 @@ export async function POST(request: NextRequest) {
     // TODO: Replace with actual AI agent call
     // For now, return a mock response structure
     // In production, this would call your AI agent API
+    const firstDestination = tripData.destinations[0]
+    const destinationFormatted = typeof firstDestination === "object" 
+      ? formatLocation(firstDestination as Location) 
+      : firstDestination
+    
     const mockResponse = {
-      destination: tripData.destinations[0],
+      destination: destinationFormatted,
       assumptions: [
         "Assuming standard travel preferences based on selected interests",
         "Activities are available during the specified travel dates",
@@ -137,7 +153,7 @@ export async function POST(request: NextRequest) {
                 range: "Free",
               },
               duration_hours: 2,
-              location: tripData.destinations[0],
+              location: destinationFormatted,
               best_time_to_visit: "Morning or late afternoon",
               booking_required: false,
               deal_sources: [],

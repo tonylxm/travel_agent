@@ -5,98 +5,17 @@ import TripForm from "@/components/trip-form";
 import TripContext from "@/contexts/trip-context";
 import ItineraryView from "@/components/itinerary-view";
 import { BookingProvider } from "@/contexts/booking-context";
+import type { Location } from "@/lib/types/location";
+import { getAirportCode } from "@/lib/utils/location";
 
 export default function PlannerPage() {
   const [tripData, setTripData] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState("form"); // 'form' or 'view'
 
-  const countries = {
-    usa: {
-      "new york": "JFK",
-      "los angeles": "LAX",
-      chicago: "ORD",
-      atlanta: "ATL",
-      dallas: "DFW",
-    },
-    uk: {
-      london: "LHR",
-      manchester: "MAN",
-      birmingham: "BHX",
-      edinburgh: "EDI",
-      glasgow: "GLA",
-    },
-    australia: {
-      sydney: "SYD",
-      melbourne: "MEL",
-      brisbane: "BNE",
-      perth: "PER",
-      adelaide: "ADL",
-    },
-    new_zealand: {
-      auckland: "AKL",
-      wellington: "WLG",
-      christchurch: "CHC",
-      queenstown: "ZQN",
-      dunedin: "DUD",
-    },
-    canada: {
-      toronto: "YYZ",
-      vancouver: "YVR",
-      montreal: "YUL",
-      calgary: "YYC",
-      edmonton: "YEG",
-    },
-    japan: {
-      tokyo: "HND",
-      osaka: "KIX",
-      nagoya: "NGO",
-      fukuoka: "FUK",
-    },
-    france: {
-      paris: "CDG",
-      nice: "NCE",
-      lyon: "LYS",
-      marseille: "MRS",
-    },
-    germany: {
-      frankfurt: "FRA",
-      munich: "MUC",
-      berlin: "BER",
-      hamburg: "HAM",
-    },
-    uae: {
-      dubai: "DXB",
-      "abu dhabi": "AUH",
-      sharjah: "SHJ",
-    },
-    china: {
-      beijing: "PEK",
-      shanghai: "PVG",
-      guangzhou: "CAN",
-      shenzhen: "SZX",
-    },
-  };
-
-  function getAirportCode(city: string, country: string): string | null {
-    const countryKey = country.toLowerCase().replace(/\s+/g, "_") as keyof typeof countries;
-    const cityKey = city.toLowerCase();
-    const countryData = countries[countryKey] as Record<string, string> | undefined;
-
-    return countryData?.[cityKey] || null;
-  }
-
   const handleTripSubmit = async (data: any) => {
-    const arrival_parts = data.destinations[0].split(" ");
-    const arrival_country = arrival_parts.pop();
-    const arrival_city = arrival_parts.join(" ");
-
-    const origin_parts = data.origin.split(" ");
-    const origin_country = origin_parts.pop();
-    const origin_city = origin_parts.join(" ");
-
-    // ---- Resolve codes ----
-    const originCode = getAirportCode(origin_city, origin_country);
-    const arrivalCode = getAirportCode(arrival_city, arrival_country);
+    // Extract airport codes from Location objects
+    const originCode = data.origin ? getAirportCode(data.origin) : null;
+    const arrivalCode = data.destinations?.[0] ? getAirportCode(data.destinations[0]) : null;
 
     data.arrival_id = arrivalCode;
     data.departure_id = originCode;
