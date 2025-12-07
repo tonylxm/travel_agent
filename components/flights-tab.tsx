@@ -1,8 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useBooking } from "@/contexts/booking-context";
+import FlightDetails from "@/components/flight-details";
+import BookingForm from "@/components/booking-form";
+import MockCheckout from "@/components/mock-checkout";
+import BookingSuccess from "@/components/booking-success";
+import BookingDetails from "@/components/booking-details";
+
+type BookingStep = "list" | "details" | "form" | "checkout" | "success" | "booking-details";
 
 export default function FlightsTab({ tripData }: { tripData: any }) {
+  const { setSelectedFlight } = useBooking();
+  const [bookingStep, setBookingStep] = useState<BookingStep>("list");
   // Hardcoded mock data matching Google Flights/Serp API structure
   const mockFlights = [
     {
@@ -125,6 +135,62 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
   //   fetchData();
   // }, [tripData?.departure_id, tripData?.arrival_id, tripData?.startDate, tripData?.endDate]);
 
+  // Render different steps of booking flow
+  if (bookingStep === "details") {
+    return (
+      <FlightDetails
+        tripData={tripData}
+        onBack={() => setBookingStep("list")}
+        onBookWithAI={() => setBookingStep("form")}
+      />
+    );
+  }
+
+  if (bookingStep === "form") {
+    return (
+      <BookingForm
+        tripData={tripData}
+        onBack={() => setBookingStep("details")}
+        onContinue={() => setBookingStep("checkout")}
+      />
+    );
+  }
+
+  if (bookingStep === "checkout") {
+    return (
+      <MockCheckout
+        onBack={() => setBookingStep("form")}
+        onPaymentSuccess={() => setBookingStep("success")}
+      />
+    );
+  }
+
+  if (bookingStep === "success") {
+    return (
+      <BookingSuccess
+        onViewDetails={() => setBookingStep("booking-details")}
+        onGoToItinerary={() => {
+          // Navigate back to itinerary view - this will be handled by parent
+          setBookingStep("list");
+          // The parent component should handle showing itinerary tab
+        }}
+      />
+    );
+  }
+
+  if (bookingStep === "booking-details") {
+    return (
+      <BookingDetails
+        onBack={() => setBookingStep("success")}
+        onViewItinerary={() => {
+          setBookingStep("list");
+          // The parent component should handle showing itinerary tab
+        }}
+      />
+    )
+  }
+
+  // Default: show flight list
   return (
     <div className="space-y-6">
       <div>
@@ -133,36 +199,21 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
           Outbound flights from {tripData?.origin} to {tripData?.destinations?.[0]}
         </p>
 
-        {/* Loading and error states commented out for hardcoded data */}
-        {/* {loading && (
-          <div className="text-center py-8 text-muted-foreground">Loading flights...</div>
-        )}
-
-        {error && (
-          <div className="text-center py-8 text-destructive">
-            <p>{error}</p>
-          </div>
-        )}
-
-        {!loading && !error && flights.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">No flights available</div>
-        )} */}
-
         {flights.length > 0 && (
           <div className="space-y-3">
             {flights.map((flightPath, index) => {
             let total_flight_time = 0;
             return (
               <div
-                key={Math.random()}
+                key={index}
                 className="border border-border rounded-lg p-4 bg-background flex justify-between items-center"
               >
                 <div>
                   <p className="font-semibold text-foreground">Flight Path {index + 1}</p>
-                  {flightPath.flights.map((flight: any) => {
+                  {flightPath.flights.map((flight: any, flightIdx: number) => {
                     total_flight_time += flight.duration;
                     return (
-                      <p key={Math.random()} className="text-sm text-muted-foreground">
+                      <p key={flightIdx} className="text-sm text-muted-foreground">
                         Departure: {flight.departure_airport.name} {"      ------>     "} Arrival:{" "}
                         {flight.arrival_airport.name} Duration: {Math.floor(flight.duration / 60)}h{" "}
                         {flight.duration % 60}m
@@ -175,25 +226,22 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
                 </div>
                 <div className="text-right">
                   <p className="font-semibold text-primary text-lg">${flightPath.price}</p>
-                  <button className="text-sm text-accent hover:underline mt-1">Select</button>
+                  <button
+                    onClick={() => {
+                      setSelectedFlight(flightPath);
+                      setBookingStep("details");
+                    }}
+                    className="text-sm text-accent hover:underline mt-1"
+                  >
+                    Book with AI
+                  </button>
                 </div>
               </div>
             );
-            // return (
-            //   <div key={Math.random()} className="border-2 border-b">
-            //     {flightPath.flights.map((flight) => {
-            //       return (
-            //         <div key={Math.random()}>
-            //           {flight.departure_airport.name} =====D {flight.arrival_airport.name}
-            //         </div>
-            //       );
-            //     })}
-            //   </div>
-            // );
             })}
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import HotelDetails from "@/components/hotel-details";
 
 export default function AccommodationTab({ tripData }: { tripData: any }) {
+  const [selectedHotel, setSelectedHotel] = useState<any>(null);
   const [hotels, setHotels] = useState([
     {
       name: "Hampton Inn Los Angeles Int'l Airport/Hawthorne",
@@ -262,6 +264,21 @@ export default function AccommodationTab({ tripData }: { tripData: any }) {
 
     // fetchData();
   }, []);
+  // Show hotel details if one is selected
+  if (selectedHotel) {
+    return (
+      <HotelDetails
+        hotel={selectedHotel}
+        tripData={tripData}
+        onBack={() => setSelectedHotel(null)}
+        onBookWithAI={() => {
+          // TODO: Implement AI booking flow
+          console.log("Book with AI Agent for:", selectedHotel.name);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -269,19 +286,34 @@ export default function AccommodationTab({ tripData }: { tripData: any }) {
         <p className="text-muted-foreground mb-6">Budget range: ${tripData?.budget / 7} per night (estimated)</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {hotels.map((hotel) => (
+          {hotels.map((hotel, index) => (
             <div
-              key={Math.random()}
+              key={index}
               className="border border-border rounded-lg overflow-hidden bg-background hover:shadow-lg transition"
             >
-              <div className="h-32 bg-gradient-to-br from-secondary to-accent"></div>
+              {hotel.thumbnail ? (
+                <div className="relative h-32 w-full">
+                  <img
+                    src={hotel.thumbnail}
+                    alt={hotel.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="h-32 bg-gradient-to-br from-secondary to-accent"></div>
+              )}
               <div className="p-4">
-                <h3 className="font-semibold text-foreground">Hotel {hotel.name}</h3>
+                <h3 className="font-semibold text-foreground">{hotel.name}</h3>
                 <p className="text-sm text-muted-foreground mt-1">
                   {hotel.overall_rating}★ • {hotel.reviews} reviews
                 </p>
                 <p className="text-primary font-semibold mt-3">{hotel.price}/night</p>
-                <button className="text-sm text-accent hover:underline mt-2">View Details</button>
+                <button
+                  onClick={() => setSelectedHotel(hotel)}
+                  className="text-sm text-accent hover:underline mt-2"
+                >
+                  View Details
+                </button>
               </div>
             </div>
           ))}

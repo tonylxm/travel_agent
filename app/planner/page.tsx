@@ -4,9 +4,10 @@ import { useState } from "react";
 import TripForm from "@/components/trip-form";
 import TripContext from "@/contexts/trip-context";
 import ItineraryView from "@/components/itinerary-view";
+import { BookingProvider } from "@/contexts/booking-context";
 
 export default function PlannerPage() {
-  const [tripData, setTripData] = useState(null);
+  const [tripData, setTripData] = useState<any>(null);
   const [currentStep, setCurrentStep] = useState("form"); // 'form' or 'view'
 
   const countries = {
@@ -77,13 +78,14 @@ export default function PlannerPage() {
   };
 
   function getAirportCode(city: string, country: string): string | null {
-    const countryKey = country.toLowerCase().replace(/\s+/g, "_");
+    const countryKey = country.toLowerCase().replace(/\s+/g, "_") as keyof typeof countries;
     const cityKey = city.toLowerCase();
+    const countryData = countries[countryKey] as Record<string, string> | undefined;
 
-    return countries[countryKey]?.[cityKey] || null;
+    return countryData?.[cityKey] || null;
   }
 
-  const handleTripSubmit = async (data) => {
+  const handleTripSubmit = async (data: any) => {
     const arrival_parts = data.destinations[0].split(" ");
     const arrival_country = arrival_parts.pop();
     const arrival_city = arrival_parts.join(" ");
@@ -111,13 +113,15 @@ export default function PlannerPage() {
 
   return (
     <TripContext.Provider value={{ tripData, setTripData }}>
-      <main className="min-h-screen bg-background">
-        {currentStep === "form" ? (
-          <TripForm onSubmit={handleTripSubmit} />
-        ) : (
-          <ItineraryView tripData={tripData} onNewTrip={handleNewTrip} />
-        )}
-      </main>
+      <BookingProvider>
+        <main className="min-h-screen bg-background">
+          {currentStep === "form" ? (
+            <TripForm onSubmit={handleTripSubmit} />
+          ) : (
+            <ItineraryView tripData={tripData} onNewTrip={handleNewTrip} />
+          )}
+        </main>
+      </BookingProvider>
     </TripContext.Provider>
   );
 }
