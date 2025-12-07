@@ -28,10 +28,10 @@ app.post("/flights", async (req: ExRequest, res: ExResponse) => {
   try {
     const json = await getJson({
       engine: "google_flights",
-      departure_id,
-      arrival_id,
-      outbound_date,
-      return_date,
+      departure_id : departure_id,
+      arrival_id: arrival_id,
+      outbound_date: outbound_date,
+      return_date : return_date,
       currency: flightCurrency,
       hl: "en",
       api_key: "5580196c75876369baeda8174d41c1950a26aa121582579439d5fa1c888c5458", // <-- use env variable
@@ -45,21 +45,22 @@ app.post("/flights", async (req: ExRequest, res: ExResponse) => {
 });
 
 // GET /hotels endpoint
-app.get("/hotels", async (req: ExRequest, res: ExResponse) => {
+app.post("/hotels", async (req: ExRequest, res: ExResponse) => {
   try {
+    const { arrival_id, check_in_date, check_out_date, adults, currency } = req.body;
     const json = await getJson({
       engine: "google_hotels",
-      q: "Bali Resorts",
-      check_in_date: "2025-12-07",
-      check_out_date: "2025-12-08",
-      adults: "2",
-      currency: "USD",
+      q: `Hotels near ${arrival_id}`,
+      check_in_date: check_in_date,
+      check_out_date: check_out_date,
+      adults: adults,
+      currency: currency,
       gl: "us",
       hl: "en",
-      property_token: "ChcI9uq9hrWO2OtjGgsvZy8xMjJ0YzFteBAB",
-      api_key: process.env.SERP_API_KEY, // <-- use env variable
+      api_key: "5580196c75876369baeda8174d41c1950a26aa121582579439d5fa1c888c5458", // <-- use env variable
     });
-
+    console.log(json);
+    
     return res.status(200).json({ message: "Successfully retrieved hotels", data: json });
   } catch (err: any) {
     console.error(err);
