@@ -3,36 +3,127 @@
 import { useEffect, useState } from "react";
 
 export default function FlightsTab({ tripData }: { tripData: any }) {
-  const [flights, setFlights] = useState();
-
-  // Sydney Australia Melbourne Australia
-  // Melbourne Australia
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const { departure_id, arrival_id, startDate, endDate, currency } = tripData;
-      console.log(departure_id);
-
-      const res = await fetch("http://localhost:3001/flights", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+  // Hardcoded mock data matching Google Flights/Serp API structure
+  const mockFlights = [
+    {
+      price: 850,
+      flights: [
+        {
+          departure_airport: { name: "Sydney Kingsford Smith Airport (SYD)" },
+          arrival_airport: { name: "Los Angeles International Airport (LAX)" },
+          duration: 840, // 14 hours in minutes
         },
-        body: JSON.stringify({
-          departure_id: departure_id,
-          arrival_id: arrival_id,
-          outbound_date: startDate,
-          return_date: endDate,
-          currency: currency,
-        }),
-      });
-      const data = await res.json();
-      console.log(JSON.stringify(data.data.best_flights));
-      setFlights(data.data.best_flights);
-    };
+      ],
+    },
+    {
+      price: 920,
+      flights: [
+        {
+          departure_airport: { name: "Sydney Kingsford Smith Airport (SYD)" },
+          arrival_airport: { name: "San Francisco International Airport (SFO)" },
+          duration: 780, // 13 hours in minutes
+        },
+        {
+          departure_airport: { name: "San Francisco International Airport (SFO)" },
+          arrival_airport: { name: "Los Angeles International Airport (LAX)" },
+          duration: 90, // 1.5 hours in minutes
+        },
+      ],
+    },
+    {
+      price: 780,
+      flights: [
+        {
+          departure_airport: { name: "Sydney Kingsford Smith Airport (SYD)" },
+          arrival_airport: { name: "Auckland Airport (AKL)" },
+          duration: 180, // 3 hours in minutes
+        },
+        {
+          departure_airport: { name: "Auckland Airport (AKL)" },
+          arrival_airport: { name: "Los Angeles International Airport (LAX)" },
+          duration: 720, // 12 hours in minutes
+        },
+      ],
+    },
+    {
+      price: 1050,
+      flights: [
+        {
+          departure_airport: { name: "Sydney Kingsford Smith Airport (SYD)" },
+          arrival_airport: { name: "Los Angeles International Airport (LAX)" },
+          duration: 840, // 14 hours in minutes
+        },
+      ],
+    },
+    {
+      price: 950,
+      flights: [
+        {
+          departure_airport: { name: "Sydney Kingsford Smith Airport (SYD)" },
+          arrival_airport: { name: "Dubai International Airport (DXB)" },
+          duration: 900, // 15 hours in minutes
+        },
+        {
+          departure_airport: { name: "Dubai International Airport (DXB)" },
+          arrival_airport: { name: "Los Angeles International Airport (LAX)" },
+          duration: 1020, // 17 hours in minutes
+        },
+      ],
+    },
+  ];
 
-    fetchData();
-  }, []);
+  const [flights, setFlights] = useState<any[]>(mockFlights);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Commented out API call - using hardcoded data for now
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     // Sydney Australia
+  //     // Tokyo Japan
+  //     if (!tripData?.departure_id || !tripData?.arrival_id) {
+  //       setError(
+  //         `Missing airport codes. Origin: ${tripData?.departure_id || "not found"}, Destination: ${tripData?.arrival_id || "not found"}. Please check that your city names are in the format "City Country" (e.g., "Sydney Australia").`
+  //       );
+  //       return;
+  //     }
+
+  //     setLoading(true);
+  //     setError(null);
+
+  //     try {
+  //       const { departure_id, arrival_id, startDate, endDate, currency } = tripData;
+
+  //       const res = await fetch("http://localhost:3001/flights", {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         body: JSON.stringify({
+  //           departure_id: departure_id,
+  //           arrival_id: arrival_id,
+  //           outbound_date: startDate,
+  //           return_date: endDate,
+  //           currency: currency,
+  //         }),
+  //       });
+
+  //       if (!res.ok) {
+  //         throw new Error("Failed to fetch flights");
+  //       }
+
+  //       const data = await res.json();
+  //       setFlights(data?.data?.best_flights || []);
+  //     } catch (err) {
+  //       setError(err instanceof Error ? err.message : "An error occurred");
+  //       setFlights([]);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, [tripData?.departure_id, tripData?.arrival_id, tripData?.startDate, tripData?.endDate]);
 
   return (
     <div className="space-y-6">
@@ -41,20 +132,25 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
         <p className="text-muted-foreground mb-6">
           Outbound flights from {tripData?.origin} to {tripData?.destinations?.[0]}
         </p>
-        {/* <div>
-          <label className="block text-sm font-medium text-foreground mb-2">Budget: ${budget}</label>
-          <input
-            type="range"
-            min="0"
-            max="3000"
-            step="25"
-            value={budget}
-            onChange={(e) => setBudget((prev) => Number(e.target.value))}
-            className="w-full"
-          />
-        </div> */}
-        <div className="space-y-3">
-          {flights.map((flightPath, index) => {
+
+        {/* Loading and error states commented out for hardcoded data */}
+        {/* {loading && (
+          <div className="text-center py-8 text-muted-foreground">Loading flights...</div>
+        )}
+
+        {error && (
+          <div className="text-center py-8 text-destructive">
+            <p>{error}</p>
+          </div>
+        )}
+
+        {!loading && !error && flights.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground">No flights available</div>
+        )} */}
+
+        {flights.length > 0 && (
+          <div className="space-y-3">
+            {flights.map((flightPath, index) => {
             let total_flight_time = 0;
             return (
               <div
@@ -63,7 +159,7 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
               >
                 <div>
                   <p className="font-semibold text-foreground">Flight Path {index + 1}</p>
-                  {flightPath.flights.map((flight) => {
+                  {flightPath.flights.map((flight: any) => {
                     total_flight_time += flight.duration;
                     return (
                       <p key={Math.random()} className="text-sm text-muted-foreground">
@@ -94,8 +190,9 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
             //     })}
             //   </div>
             // );
-          })}
-        </div>
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
