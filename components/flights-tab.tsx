@@ -1,6 +1,10 @@
-"use client"
+"use client";
+
+import { useState } from "react";
 
 export default function FlightsTab({ tripData }: { tripData: any }) {
+  const [budget, setBudget] = useState<number>(0);
+
   return (
     <div className="space-y-6">
       <div>
@@ -8,7 +12,18 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
         <p className="text-muted-foreground mb-6">
           Outbound flights from {tripData?.origin} to {tripData?.destinations?.[0]}
         </p>
-
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-2">Budget: ${budget}</label>
+          <input
+            type="range"
+            min="0"
+            max="3000"
+            step="25"
+            value={budget}
+            onChange={(e) => setBudget((prev) => Number(e.target.value))}
+            className="w-full"
+          />
+        </div>
         <div className="space-y-3">
           {[1, 2, 3].map((flight) => (
             <div
@@ -28,5 +43,5 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
