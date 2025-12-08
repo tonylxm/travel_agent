@@ -21,11 +21,11 @@ export default function ItineraryView({ tripData, onNewTrip }: { tripData: any; 
   
   // Determine active tab from pathname or default to itinerary
   const getActiveTabFromPath = () => {
-    if (pathname === "/planner/itinerary") return "itinerary"
-    if (pathname === "/planner/flights") return "flights"
-    if (pathname === "/planner/accommodation") return "accommodation"
-    if (pathname === "/planner/activities") return "activities"
-    if (pathname === "/planner/summary") return "summary"
+    if (pathname === "/itinerary") return "itinerary"
+    if (pathname === "/flights") return "flights"
+    if (pathname === "/accommodation") return "accommodation"
+    if (pathname === "/activities") return "activities"
+    if (pathname === "/summary") return "summary"
     return "itinerary"
   }
   
@@ -50,7 +50,7 @@ export default function ItineraryView({ tripData, onNewTrip }: { tripData: any; 
   
   const handleTabChange = (tabId: string) => {
     setActiveTab(tabId)
-    router.push(`/planner/${tabId === "summary" ? "summary" : tabId}`)
+    router.push(`/${tabId === "summary" ? "summary" : tabId}`)
   }
 
   const tabs = [
@@ -149,7 +149,7 @@ export default function ItineraryView({ tripData, onNewTrip }: { tripData: any; 
                 </p>
               </div>
               <Button variant="outline" onClick={onNewTrip}>
-                New Trip
+                Plan New Trip
               </Button>
             </div>
           </div>
@@ -183,7 +183,7 @@ export default function ItineraryView({ tripData, onNewTrip }: { tripData: any; 
             <Link href="/">
               <Button variant="outline">Back Home</Button>
             </Link>
-            <Link href="/planner">
+            <Link href="/itinerary">
               <Button>Continue Planning</Button>
             </Link>
           </div>

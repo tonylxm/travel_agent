@@ -69,7 +69,7 @@ export default function ItineraryTab({ tripData }: { tripData: any }) {
   }
 
   const handleContinueToBooking = () => {
-    router.push("/planner/summary")
+    router.push("/summary")
   }
 
   const handleActivityUpdate = (activityId: string, updates: Partial<Activity>) => {

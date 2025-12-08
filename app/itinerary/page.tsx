@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation"
 import { useContext } from "react"
 import TripForm from "@/components/trip-form"
 import TripContext from "@/contexts/trip-context"
+import ItineraryView from "@/components/itinerary-view"
 import { getAirportCode } from "@/lib/utils/location"
 
-export default function Home() {
+export default function ItineraryPage() {
   const router = useRouter()
-  const { setTripData } = useContext(TripContext)
+  const { tripData, setTripData } = useContext(TripContext)
 
   const handleTripSubmit = async (data: any) => {
     const originCode = data.origin ? getAirportCode(data.origin) : null
@@ -24,9 +25,25 @@ export default function Home() {
     router.push("/itinerary")
   }
 
+  const handleNewTrip = () => {
+    setTripData(null)
+    router.push("/")
+  }
+
+  // If no trip data, show form
+  if (!tripData) {
+    return (
+      <main className="min-h-screen bg-background">
+        <TripForm onSubmit={handleTripSubmit} />
+      </main>
+    )
+  }
+
+  // Show itinerary view with tabs
   return (
     <main className="min-h-screen bg-background">
-      <TripForm onSubmit={handleTripSubmit} />
+      <ItineraryView tripData={tripData} onNewTrip={handleNewTrip} />
     </main>
   )
 }
+
