@@ -9,6 +9,7 @@ import Link from "next/link"
 import LocationInput from "@/components/location-input"
 import type { Location } from "@/lib/types/location"
 import { LOCATIONS_DATABASE } from "@/lib/data/locations"
+import { Calendar, Plane, MapPin } from "lucide-react"
 
 interface TripFormData {
   origin: Location | null
@@ -24,16 +25,18 @@ interface TripFormData {
 }
 
 const interests = [
-  "Beach",
-  "Mountains",
-  "Culture",
-  "Adventure",
-  "Food",
-  "History",
-  "Nightlife",
-  "Shopping",
-  "Nature",
-  "Art",
+  { name: "Food" },
+  { name: "Nightlife" },
+  { name: "Outdoors" },
+  { name: "Museums" },
+  { name: "Shopping" },
+  { name: "Wellness" },
+  { name: "Beach" },
+  { name: "Culture" },
+  { name: "Adventure" },
+  { name: "History" },
+  { name: "Nature" },
+  { name: "Art" },
 ]
 
 export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) => void }) {
@@ -86,7 +89,7 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
       budget: 8000,
       travelers: 4,
       tripCategory: "Family Holiday",
-      interests: interests.filter((i) => i !== "Beach"), // All interests except Beach
+      interests: interests.filter((i) => i.name !== "Beach").map((i) => i.name), // All interests except Beach
       additionalInformation: "Mum's birthday is on the 23rd, we want to eat KFC for Christmas. My older sister is vegetarian, she doesn't mind us eating meat but we do want to make sure she always has something to eat.",
     })
   }
@@ -155,86 +158,128 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
 
   return (
     <>
-      <main className="min-h-screen bg-background px-4 py-12">
-        <div className="mx-auto max-w-2xl">
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
+      <main className="min-h-screen px-4 py-12 flex flex-col">
+        {/* Hero Section */}
+        <div className="flex-1 flex items-center justify-center mb-8">
+          <div className="text-center space-y-4">
+            <h1 className="text-5xl md:text-6xl font-bold text-white drop-shadow-lg">
+              Your next adventure, intelligently planned.
+            </h1>
+            <p className="text-xl md:text-2xl text-white/90 drop-shadow-md">
+              Tell us your dream trip, and let our AI craft the perfect itinerary for you.
+            </p>
+          </div>
+        </div>
+
+        {/* Form Card */}
+        <div className="mx-auto max-w-4xl w-full">
+          <form onSubmit={handleSubmit} className="space-y-8 rounded-2xl bg-white p-8 md:p-12 shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Plan Your Trip</h1>
-                <p className="mt-2 text-muted-foreground">Tell us about your ideal journey</p>
+                <h2 className="text-2xl font-bold text-gray-900">Plan Your Trip</h2>
+                <p className="mt-1 text-gray-600">Tell us about your ideal journey</p>
               </div>
               <Button
                 type="button"
                 variant="outline"
                 onClick={fillDemoData}
-                className="text-sm"
+                className="text-sm bg-white"
               >
                 Fill Demo Data
               </Button>
             </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border border-border bg-card p-8">
-            {/* Origin */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Departure City</label>
-              <LocationInput
-                value={formData.origin}
-                onChange={(location) => setFormData({ ...formData, origin: location })}
-                placeholder="e.g., San Francisco"
-                required
-              />
-            </div>
-
-            {/* Destinations */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Destinations</label>
-              <div className="space-y-3">
-                {formData.destinations.map((dest, idx) => (
-                  <LocationInput
-                    key={idx}
-                    value={dest}
-                    onChange={(location) => handleDestinationChange(idx, location)}
-                    placeholder={`Destination ${idx + 1}`}
-                    required
-                  />
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleAddDestination}
-                  className="w-full bg-transparent"
-                >
-                  + Add Another Destination
-                </Button>
-              </div>
-            </div>
-
             {/* Dates */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Start Date</label>
-                <Input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                  <Input
+                    type="date"
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                    required
+                    className="pl-10 bg-white text-gray-900"
+                  />
+                </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">End Date</label>
-                <Input
-                  type="date"
-                  value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+                  <Input
+                    type="date"
+                    value={formData.endDate}
+                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                    required
+                    className="pl-10 bg-white text-gray-900"
+                  />
+                </div>
               </div>
             </div>
 
+            {/* Location Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Departure</label>
+                <div className="relative">
+                  <Plane className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none z-10" />
+                  <LocationInput
+                    value={formData.origin}
+                    onChange={(location) => setFormData({ ...formData, origin: location })}
+                    placeholder="e.g. New York, USA"
+                    required
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Arrival</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none z-10" />
+                  <LocationInput
+                    value={formData.destinations[0]}
+                    onChange={(location) => handleDestinationChange(0, location)}
+                    placeholder="e.g. Paris, France"
+                    required
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Additional Destinations */}
+            {formData.destinations.length > 1 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Additional Destinations</label>
+                <div className="space-y-3">
+                  {formData.destinations.slice(1).map((dest, idx) => (
+                    <LocationInput
+                      key={idx + 1}
+                      value={dest}
+                      onChange={(location) => handleDestinationChange(idx + 1, location)}
+                      placeholder={`Destination ${idx + 2}`}
+                      className="bg-white"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {formData.destinations.length === 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddDestination}
+                className="w-full bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+              >
+                + Add Another Destination
+              </Button>
+            )}
+
             {/* Budget */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Budget: ${formData.budget}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Budget: ${formData.budget}</label>
               <input
                 type="range"
                 min="1000"
@@ -242,13 +287,13 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
                 step="500"
                 value={formData.budget}
                 onChange={(e) => setFormData({ ...formData, budget: Number(e.target.value) })}
-                className="w-full"
+                className="w-full accent-blue-600"
               />
             </div>
 
             {/* Travelers */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Number of Travelers</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Number of Travelers</label>
               <Input
                 type="number"
                 min="1"
@@ -256,17 +301,18 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
                 value={formData.travelers}
                 onChange={(e) => setFormData({ ...formData, travelers: Number(e.target.value) })}
                 required
+                className="bg-white text-gray-900"
               />
             </div>
 
             {/* Trip Category */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Type of Trip *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Type of Trip *</label>
               <select
                 value={formData.tripCategory}
                 onChange={(e) => setFormData({ ...formData, tripCategory: e.target.value })}
                 required
-                className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="w-full px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select trip type...</option>
                 <option value="Business Trip">Business Trip</option>
@@ -279,53 +325,85 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
 
             {/* Interests */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-3">Interests</label>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {interests.map((interest) => (
-                  <button
-                    key={interest}
-                    type="button"
-                    onClick={() => handleInterestToggle(interest)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
-                      formData.interests.includes(interest)
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:bg-border"
-                    }`}
-                  >
-                    {interest}
-                  </button>
-                ))}
+              <label className="block text-sm font-medium text-gray-700 mb-3">What are you interested in?</label>
+              <div className="grid grid-cols-6 gap-3">
+                {interests.slice(0, 6).map((interest) => {
+                  const isSelected = formData.interests.includes(interest.name)
+                  return (
+                    <button
+                      key={interest.name}
+                      type="button"
+                      onClick={() => handleInterestToggle(interest.name)}
+                      className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition ${
+                        isSelected
+                          ? "bg-blue-50 border-blue-500 text-blue-700"
+                          : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      <span className="text-xs font-medium">{interest.name}</span>
+                    </button>
+                  )
+                })}
               </div>
+              {/* Additional interests in a grid below */}
+              {interests.length > 6 && (
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-3">
+                  {interests.slice(6).map((interest) => {
+                    const isSelected = formData.interests.includes(interest.name)
+                    return (
+                      <button
+                        key={interest.name}
+                        type="button"
+                        onClick={() => handleInterestToggle(interest.name)}
+                        className={`px-3 py-2 rounded-lg text-sm font-medium transition ${
+                          isSelected
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        }`}
+                      >
+                        {interest.name}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Additional Information */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Anything else we should know? (eg. special plans, dietary requirements)
               </label>
               <textarea
                 value={formData.additionalInformation || ""}
                 onChange={(e) => setFormData({ ...formData, additionalInformation: e.target.value })}
                 placeholder="e.g., Vegetarian diet, celebrating anniversary, need wheelchair accessible venues..."
-                className="w-full min-h-[100px] px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm resize-y focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="w-full min-h-[100px] px-3 py-2 rounded-md border border-gray-300 bg-white text-gray-900 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
 
             {/* Submit */}
-            <div className="flex gap-4">
+            <div className="flex flex-col gap-4">
               {error && (
-                <div className="col-span-full rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
+                <div className="rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-700">
                   {error}
                 </div>
               )}
-              <Button type="submit" size="lg" className="flex-1" disabled={isLoading}>
-                {isLoading ? "Generating..." : "Generate Itinerary"}
-              </Button>
-              <Link href="/">
-                <Button variant="outline" size="lg" disabled={isLoading}>
-                  Back
+              <div className="flex gap-4">
+                <Button 
+                  type="submit" 
+                  size="lg" 
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white" 
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Generating..." : "Generate Itinerary"}
                 </Button>
-              </Link>
+                <Link href="/">
+                  <Button variant="outline" size="lg" disabled={isLoading} className="bg-white border-gray-300 text-gray-700 hover:bg-gray-50">
+                    Back
+                  </Button>
+                </Link>
+              </div>
             </div>
           </form>
         </div>

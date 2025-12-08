@@ -65,12 +65,16 @@ export default function FlightDetails({ tripData, onBack, onBookWithAI }: Flight
           {/* Flight Route */}
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-3 mb-2">
                 <Plane className="h-5 w-5 text-primary" />
                 <span className="font-semibold text-foreground">
                   {firstFlight.airline || "Airline"} {firstFlight.flightNumber || "N/A"}
                 </span>
-                <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${
+                  cabin === "Business" 
+                    ? "bg-purple-500 text-white" 
+                    : "bg-green-500 text-white"
+                }`}>
                   {cabin}
                 </span>
               </div>
@@ -190,10 +194,14 @@ export default function FlightDetails({ tripData, onBack, onBookWithAI }: Flight
 
         {/* Overall Journey Summary */}
         <div className="border border-border rounded-lg p-6 bg-card space-y-4">
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-3 mb-2">
             <Plane className="h-5 w-5 text-primary" />
             <span className="font-semibold text-foreground">Overall Journey</span>
-            <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+            <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${
+              cabin === "Business" 
+                ? "bg-purple-500 text-white" 
+                : "bg-green-500 text-white"
+            }`}>
               {cabin}
             </span>
           </div>
@@ -228,12 +236,16 @@ export default function FlightDetails({ tripData, onBack, onBookWithAI }: Flight
             <div key={idx} className="space-y-4">
               {idx > 0 && <div className="border-t border-border pt-4" />}
               <div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-3 mb-2">
                   <Plane className="h-5 w-5 text-primary" />
                   <span className="font-semibold text-foreground">
                     {segment.airline || "Airline"} {segment.flightNumber || "N/A"}
                   </span>
-                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                  <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${
+                    cabin === "Business" 
+                      ? "bg-purple-500 text-white" 
+                      : "bg-green-500 text-white"
+                  }`}>
                     {cabin}
                   </span>
                 </div>
@@ -263,6 +275,9 @@ export default function FlightDetails({ tripData, onBack, onBookWithAI }: Flight
                     <p className="text-sm font-semibold text-foreground">
                       {segment.date || "N/A"} at {segment.departure_time || "N/A"}
                     </p>
+                    <p className="text-xs text-muted-foreground">
+                      Duration: {Math.floor((segment.duration || 0) / 60)}h {(segment.duration || 0) % 60}m
+                    </p>
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -277,13 +292,8 @@ export default function FlightDetails({ tripData, onBack, onBookWithAI }: Flight
 
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
                   <div className="flex items-center gap-2">
-                    <Clock className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Duration:</span>
-                    <span className="text-sm font-medium text-foreground">
-                      {Math.floor((segment.duration || 0) / 60)}h {(segment.duration || 0) % 60}m
-                    </span>
+                    <span className="text-sm font-semibold text-foreground">${segment.price || 0}</span>
                   </div>
-                  <span className="text-sm font-semibold text-foreground">${segment.price || 0}</span>
                 </div>
               </div>
             </div>
@@ -294,7 +304,9 @@ export default function FlightDetails({ tripData, onBack, onBookWithAI }: Flight
         <div className="border border-border rounded-lg p-6 bg-card">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Total Package Price</span>
-            <span className="text-2xl font-bold text-primary">${totalPrice}</span>
+            <span className="text-2xl font-bold text-primary">
+              ${segments.reduce((sum: number, seg: any) => sum + (seg.price || 0), 0)}
+            </span>
           </div>
         </div>
 

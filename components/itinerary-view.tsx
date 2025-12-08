@@ -154,39 +154,20 @@ export default function ItineraryView({ tripData, onNewTrip }: { tripData: any; 
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="mb-6 border-b border-border">
-            <div className="flex gap-1 overflow-x-auto">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleTabChange(tab.id)}
-                  className={`px-4 py-3 border-b-2 font-medium text-sm transition ${
-                    activeTab === tab.id
-                      ? "border-primary text-primary"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Tab Content */}
           <div className="rounded-lg border border-border bg-card p-6">
             <ActiveComponent tripData={tripData} />
           </div>
 
-          {/* Footer Actions */}
-          <div className="mt-8 flex gap-4 justify-end">
-            <Link href="/">
-              <Button variant="outline">Back Home</Button>
-            </Link>
-            <Link href="/itinerary">
-              <Button>Continue Planning</Button>
-            </Link>
-          </div>
+              {/* Footer Actions */}
+              <div className="mt-8 flex gap-4 justify-end">
+                <Link href="/itinerary">
+                  <Button variant="outline">Back Home</Button>
+                </Link>
+                <Link href="/itinerary">
+                  <Button>Continue Planning</Button>
+                </Link>
+              </div>
         </div>
       </main>
     </>

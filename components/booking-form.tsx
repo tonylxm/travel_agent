@@ -11,13 +11,13 @@ interface BookingFormProps {
     startDate?: string
     endDate?: string
   }
+  mode?: "provide-info" | "additional-info"
   onBack: () => void
   onContinue: () => void
 }
 
-export default function BookingForm({ tripData, onBack, onContinue }: BookingFormProps) {
+export default function BookingForm({ tripData, mode = "provide-info", onBack, onContinue }: BookingFormProps) {
   const { userInfo, setUserInfo, additionalInfo, setAdditionalInfo, selectedFlight } = useBooking()
-  const [showAdditionalFields, setShowAdditionalFields] = useState(false)
   const [fieldUpdates, setFieldUpdates] = useState<Record<string, boolean>>({})
   const [validationError, setValidationError] = useState<string | null>(null)
 
@@ -46,8 +46,7 @@ export default function BookingForm({ tripData, onBack, onContinue }: BookingFor
     e.preventDefault()
     setValidationError(null)
     
-    // If not showing additional fields yet, validate and show them
-    if (!showAdditionalFields) {
+    if (mode === "provide-info") {
       // Validate all first-time fields are filled
       const allFieldsFilled = 
         userInfo.fullName.trim() !== "" &&
@@ -57,9 +56,7 @@ export default function BookingForm({ tripData, onBack, onContinue }: BookingFor
         userInfo.passportCountry.trim() !== ""
       
       if (allFieldsFilled) {
-        setShowAdditionalFields(true)
-        // Scroll to top to show additional fields
-        window.scrollTo({ top: 0, behavior: "smooth" })
+        onContinue()
         return
       } else {
         setValidationError("Please fill in all required fields before continuing.")
@@ -67,8 +64,13 @@ export default function BookingForm({ tripData, onBack, onContinue }: BookingFor
       }
     }
     
-    // If showing additional fields, proceed to checkout (special assistance is optional)
-    if (showAdditionalFields) {
+    if (mode === "additional-info") {
+      // Special assistance is now required
+      if (!additionalInfo.specialAssistance || additionalInfo.specialAssistance.trim() === "") {
+        setValidationError("Please answer the special assistance question. Enter 'No' if you don't need special assistance.")
+        return
+      }
+      
       onContinue()
       return
     }
@@ -123,54 +125,59 @@ export default function BookingForm({ tripData, onBack, onContinue }: BookingFor
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">Booking Details</h1>
-        {showAdditionalFields ? (
-          <p className="text-muted-foreground">
-            This flight requires some additional information. Please complete the fields below.
-          </p>
-        ) : (
+        <h1 className="text-3xl font-bold text-foreground mb-2">
+          {mode === "provide-info" ? "Provide Key Information" : "Additional Information Required"}
+        </h1>
+        {mode === "provide-info" ? (
           <p className="text-muted-foreground">
             Thanks for planning your trip with us. As a first-time user, we'll need you to provide this essential
             information. We'll remember everything you give us so you don't have to provide it next time.
+          </p>
+        ) : (
+          <p className="text-muted-foreground">
+            The flight booking form requires additional information. Please complete the fields below.
           </p>
         )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Flight Details (Read-only) */}
-        <div className="border border-border rounded-lg p-4 bg-muted/30">
-          <h2 className="font-semibold text-foreground mb-3">Flight Information</h2>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Flight:</span>
-              <p className="font-medium text-foreground">
-                {flightDetails.airline} {flightDetails.flightNumber}
-              </p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Cabin:</span>
-              <p className="font-medium text-foreground">{flightDetails.cabin}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Departure:</span>
-              <p className="font-medium text-foreground">
-                {flightDetails.departureDate} at {flightDetails.departureTime}
-              </p>
-              <p className="text-xs text-muted-foreground">{flightDetails.departureAirport}</p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Arrival:</span>
-              <p className="font-medium text-foreground">
-                {flightDetails.arrivalDate} at {flightDetails.arrivalTime}
-              </p>
-              <p className="text-xs text-muted-foreground">{flightDetails.arrivalAirport}</p>
+        {/* Flight Details (only shown in additional-info mode) */}
+        {mode === "additional-info" && (
+          <div className="border border-border rounded-lg p-4 bg-muted/30">
+            <h2 className="font-semibold text-foreground mb-3">Flight Information</h2>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Flight:</span>
+                <p className="font-medium text-foreground">
+                  {flightDetails.airline} {flightDetails.flightNumber}
+                </p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Cabin:</span>
+                <p className="font-medium text-foreground">{flightDetails.cabin}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Departure:</span>
+                <p className="font-medium text-foreground">
+                  {flightDetails.departureDate} at {flightDetails.departureTime}
+                </p>
+                <p className="text-xs text-muted-foreground">{flightDetails.departureAirport}</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Arrival:</span>
+                <p className="font-medium text-foreground">
+                  {flightDetails.arrivalDate} at {flightDetails.arrivalTime}
+                </p>
+                <p className="text-xs text-muted-foreground">{flightDetails.arrivalAirport}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* First-time User Fields */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold text-foreground">Passenger Information</h2>
+        {/* First-time User Fields (only shown in provide-info mode) */}
+        {mode === "provide-info" && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground">Passenger Information</h2>
 
           {/* Full Name */}
           <div>
@@ -283,21 +290,23 @@ export default function BookingForm({ tripData, onBack, onContinue }: BookingFor
               </p>
             )}
           </div>
-        </div>
+          </div>
+        )}
 
-        {/* Additional Fields (shown after first-time fields are filled) */}
-        {showAdditionalFields && (
-          <div className="space-y-4 pt-4 border-t border-border">
-            <h2 className="text-xl font-semibold text-foreground">Additional Information</h2>
+        {/* Additional Information (only shown in additional-info mode) */}
+        {mode === "additional-info" && (
+          <div className="space-y-4">
+            <h2 className="text-xl font-semibold text-foreground">Additional Information Required</h2>
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Do you need special assistance? If yes, explain what you will need
+                Do you need special assistance? If yes, explain what you will need *
               </label>
               <textarea
                 value={additionalInfo.specialAssistance}
                 onChange={(e) => handleFieldChange("additional_specialAssistance", e.target.value)}
-                placeholder="Enter any special assistance requirements (optional)"
+                placeholder='Enter "No" if no'
+                required
                 className="w-full px-3 py-2 rounded-md border border-border bg-background text-foreground min-h-[100px] resize-y"
               />
               {!additionalInfo.specialAssistance && (
@@ -328,7 +337,7 @@ export default function BookingForm({ tripData, onBack, onContinue }: BookingFor
             Back
           </Button>
           <Button type="submit" className="flex-1" size="lg">
-            {showAdditionalFields ? "Confirm Booking" : "Continue"}
+            {mode === "additional-info" ? "Confirm Booking" : "Continue"}
           </Button>
         </div>
       </form>

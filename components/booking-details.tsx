@@ -15,10 +15,19 @@ export default function BookingDetails({ onBack, onViewItinerary }: BookingDetai
   // Extract flight details from selectedFlight
   const isPackage = selectedFlight?.segments && selectedFlight.segments.length > 0
   const cabin = selectedFlight?.cabin || "Economy"
-  const totalPrice = selectedFlight?.price || 0
-
-  // Calculate total with currency conversion (NZD)
-  const totalPriceNZD = (totalPrice * 1.5).toFixed(2) // Rough conversion
+  
+  // Calculate total price correctly
+  let totalPrice = 0
+  if (isPackage && selectedFlight?.segments) {
+    // For packages, sum all segment prices
+    totalPrice = selectedFlight.segments.reduce((sum: number, seg: any) => sum + (seg.price || 0), 0)
+  } else if (selectedFlight?.price) {
+    // For single flights, use the flight price
+    totalPrice = selectedFlight.price
+  } else if (selectedFlight?.flights) {
+    // Fallback: sum flight prices if available
+    totalPrice = selectedFlight.flights.reduce((sum: number, flight: any) => sum + (flight.price || 0), 0)
+  }
 
   // Helper function to format duration
   const formatDuration = (minutes: number) => {
@@ -38,7 +47,7 @@ export default function BookingDetails({ onBack, onViewItinerary }: BookingDetai
       {/* Success Header */}
       <div className="text-center space-y-2 pb-6 border-b border-border">
         <h1 className="text-3xl font-bold text-foreground">Your Flight is Booked!</h1>
-        <p className="text-lg font-semibold text-primary">Booking Ref: {bookingRef || "Q8F2LK"}</p>
+        <p className="text-lg font-semibold text-primary">Booking Ref: {bookingRef || "N/A"}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -47,7 +56,7 @@ export default function BookingDetails({ onBack, onViewItinerary }: BookingDetai
           <h2 className="text-xl font-semibold text-foreground">Passenger</h2>
           <div className="space-y-2">
             <p className="text-lg font-medium text-foreground">
-              {userInfo.fullName || "William Tay"}
+              {userInfo.fullName || "N/A"}
             </p>
             <div className="text-sm text-muted-foreground space-y-1">
               {userInfo.email && <p>Email: {userInfo.email}</p>}
@@ -69,7 +78,11 @@ export default function BookingDetails({ onBack, onViewItinerary }: BookingDetai
                     <span className="font-semibold text-foreground">
                       {segment.airline || "Airline"} {segment.flightNumber || "N/A"}
                     </span>
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                    <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${
+                      cabin === "Business" 
+                        ? "bg-purple-500 text-white" 
+                        : "bg-green-500 text-white"
+                    }`}>
                       {cabin}
                     </span>
                   </div>
@@ -103,7 +116,11 @@ export default function BookingDetails({ onBack, onViewItinerary }: BookingDetai
                     <span className="font-semibold text-foreground">
                       {flight.airline || "Airline"} {flight.flightNumber || "N/A"}
                     </span>
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                    <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${
+                      cabin === "Business" 
+                        ? "bg-purple-500 text-white" 
+                        : "bg-green-500 text-white"
+                    }`}>
                       {cabin}
                     </span>
                   </div>
@@ -141,7 +158,7 @@ export default function BookingDetails({ onBack, onViewItinerary }: BookingDetai
         <h2 className="text-xl font-semibold text-foreground mb-4">Price</h2>
         <div className="flex justify-between items-center">
           <span className="text-muted-foreground">Total Paid:</span>
-          <span className="text-2xl font-bold text-primary">NZD ${totalPriceNZD}</span>
+          <span className="text-2xl font-bold text-primary">${totalPrice.toFixed(2)}</span>
         </div>
       </div>
 

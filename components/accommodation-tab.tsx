@@ -2,7 +2,14 @@
 
 import { useEffect, useState, useMemo } from "react";
 import HotelDetails from "@/components/hotel-details";
+import AccommodationBookingForm from "@/components/accommodation-booking-form";
+import AccommodationSuccess from "@/components/accommodation-success";
+import AccommodationBookingDetails from "@/components/accommodation-booking-details";
+import MockCheckout from "@/components/mock-checkout";
 import { formatLocationForDisplay } from "@/lib/utils/format-location";
+import { useAccommodation } from "@/contexts/accommodation-context";
+
+type AccommodationBookingStep = "list" | "details" | "loading-ai" | "additional-info" | "redirecting" | "checkout" | "third-party-success" | "success" | "booking-details";
 
 // Hardcoded hotels database by city
 const HOTELS_BY_CITY: Record<string, any[]> = {
@@ -626,16 +633,130 @@ export default function AccommodationTab({ tripData }: { tripData: any }) {
 
     // fetchData();
   }, []);
-  // Show hotel details if one is selected
-  if (selectedHotel) {
+  const { selectedHotel: selectedHotelContext, setSelectedHotel: setSelectedHotelContext } = useAccommodation();
+  const [bookingStep, setBookingStep] = useState<AccommodationBookingStep>("list");
+  
+  // Use context hotel if available, otherwise use local state
+  const currentHotel = selectedHotelContext || selectedHotel;
+
+  // Show hotel details if one is selected (but not in booking flow)
+  if (currentHotel && bookingStep === "list") {
     return (
       <HotelDetails
-        hotel={selectedHotel}
+        hotel={currentHotel}
         tripData={tripData}
-        onBack={() => setSelectedHotel(null)}
+        onBack={() => {
+          setSelectedHotel(null);
+          setSelectedHotelContext(null);
+        }}
         onBookWithAI={() => {
-          // TODO: Implement AI booking flow
-          console.log("Book with AI Agent for:", selectedHotel.name);
+          setSelectedHotelContext(currentHotel);
+          setBookingStep("loading-ai");
+          // Show loading for 1 second
+          setTimeout(() => {
+            setBookingStep("additional-info");
+          }, 1000);
+        }}
+      />
+    );
+  }
+
+  // Render different steps of booking flow
+  if (bookingStep === "loading-ai") {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-lg font-medium text-foreground">Loading AI Agent</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (bookingStep === "additional-info") {
+    return (
+      <AccommodationBookingForm
+        tripData={tripData}
+        onBack={() => setBookingStep("list")}
+        onContinue={() => {
+          setBookingStep("redirecting");
+          // Show redirecting for 1.5 seconds
+          setTimeout(() => {
+            setBookingStep("checkout");
+          }, 1500);
+        }}
+      />
+    );
+  }
+
+  if (bookingStep === "redirecting") {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-lg font-medium text-foreground">Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (bookingStep === "checkout") {
+    return (
+      <MockCheckout
+        tripData={tripData}
+        onBack={() => setBookingStep("additional-info")}
+        onPaymentSuccess={() => {
+          setBookingStep("third-party-success");
+          // Show third-party success for 2 seconds, then redirect to our success page
+          setTimeout(() => {
+            setBookingStep("success");
+          }, 2000);
+        }}
+      />
+    );
+  }
+
+  if (bookingStep === "third-party-success") {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full mx-4">
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Payment Successful</h2>
+            <p className="text-gray-600">Your payment has been processed securely.</p>
+            <p className="text-sm text-gray-500">Redirecting to your booking confirmation...</p>
+            <div className="flex justify-center pt-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (bookingStep === "success") {
+    return (
+      <AccommodationSuccess
+        onViewDetails={() => setBookingStep("booking-details")}
+        onGoToItinerary={() => {
+          setBookingStep("list");
+        }}
+      />
+    );
+  }
+
+  if (bookingStep === "booking-details") {
+    return (
+      <AccommodationBookingDetails
+        tripData={tripData}
+        onBack={() => setBookingStep("success")}
+        onViewItinerary={() => {
+          // Redirect to itinerary page
+          window.location.href = "/itinerary";
         }}
       />
     );

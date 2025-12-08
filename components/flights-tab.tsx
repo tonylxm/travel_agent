@@ -11,7 +11,7 @@ import { formatLocationForDisplay } from "@/lib/utils/format-location";
 import TripContext from "@/contexts/trip-context";
 import { useContext } from "react";
 
-type BookingStep = "list" | "details" | "form" | "checkout" | "success" | "booking-details";
+type BookingStep = "list" | "details" | "loading-ai" | "provide-info" | "loading-form" | "additional-info" | "redirecting" | "checkout" | "third-party-success" | "success" | "booking-details";
 
 export default function FlightsTab({ tripData }: { tripData: any }) {
   const { setSelectedFlight } = useBooking();
@@ -115,27 +115,119 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
       <FlightDetails
         tripData={tripData}
         onBack={() => setBookingStep("list")}
-        onBookWithAI={() => setBookingStep("form")}
+        onBookWithAI={() => {
+          setBookingStep("loading-ai");
+          // Show loading for 1 second
+          setTimeout(() => {
+            setBookingStep("provide-info");
+          }, 1000);
+        }}
       />
     );
   }
 
-  if (bookingStep === "form") {
+  if (bookingStep === "loading-ai") {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-lg font-medium text-foreground">Loading AI Agent</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (bookingStep === "provide-info") {
     return (
       <BookingForm
         tripData={tripData}
+        mode="provide-info"
         onBack={() => setBookingStep("details")}
-        onContinue={() => setBookingStep("checkout")}
+        onContinue={() => {
+          setBookingStep("loading-form");
+          // Show loading for 2 seconds
+          setTimeout(() => {
+            setBookingStep("additional-info");
+          }, 2000);
+        }}
       />
+    );
+  }
+
+  if (bookingStep === "loading-form") {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-lg font-medium text-foreground">Intelligently filling in form...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (bookingStep === "additional-info") {
+    return (
+      <BookingForm
+        tripData={tripData}
+        mode="additional-info"
+        onBack={() => setBookingStep("provide-info")}
+        onContinue={() => {
+          setBookingStep("redirecting");
+          // Show redirecting for 1.5 seconds
+          setTimeout(() => {
+            setBookingStep("checkout");
+          }, 1500);
+        }}
+      />
+    );
+  }
+
+  if (bookingStep === "redirecting") {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-lg font-medium text-foreground">Redirecting...</p>
+        </div>
+      </div>
     );
   }
 
   if (bookingStep === "checkout") {
     return (
       <MockCheckout
-        onBack={() => setBookingStep("form")}
-        onPaymentSuccess={() => setBookingStep("success")}
+        tripData={tripData}
+        onBack={() => setBookingStep("additional-info")}
+        onPaymentSuccess={() => {
+          setBookingStep("third-party-success");
+          // Show third-party success for 2 seconds, then redirect to our success page
+          setTimeout(() => {
+            setBookingStep("success");
+          }, 2000);
+        }}
       />
+    );
+  }
+
+  if (bookingStep === "third-party-success") {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full mx-4">
+          <div className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Payment Successful</h2>
+            <p className="text-gray-600">Your payment has been processed securely.</p>
+            <p className="text-sm text-gray-500">Redirecting to your booking confirmation...</p>
+            <div className="flex justify-center pt-4">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -155,7 +247,8 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
       <BookingDetails
         onBack={() => setBookingStep("success")}
         onViewItinerary={() => {
-          setBookingStep("list");
+          // Redirect to itinerary page
+          window.location.href = "/itinerary";
         }}
       />
     );
@@ -179,19 +272,28 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
 
         {!loading && !error && hasPackages && (
           <div className="space-y-4">
-            {packages.map((pkg: any, pkgIdx: number) => (
+            {packages.map((pkg: any, pkgIdx: number) => {
+              // Calculate total price from segments
+              const calculatedTotal = pkg.segments.reduce((sum: number, seg: any) => sum + (seg.price || 0), 0)
+              const displayPrice = calculatedTotal > 0 ? calculatedTotal : pkg.price
+              
+              return (
               <div
                 key={pkgIdx}
                 className="border border-border rounded-lg p-6 bg-background"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-foreground">
                         Package {pkgIdx + 1}
                       </h3>
                       {pkg.cabin && (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                        <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${
+                          pkg.cabin === "Business" 
+                            ? "bg-purple-500 text-white" 
+                            : "bg-green-500 text-white"
+                        }`}>
                           {pkg.cabin}
                         </span>
                       )}
@@ -201,7 +303,7 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-primary">${pkg.price}</p>
+                    <p className="text-2xl font-bold text-primary">${displayPrice}</p>
                     <p className="text-xs text-muted-foreground">Total Package Price</p>
                   </div>
                 </div>
@@ -218,7 +320,10 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
                             {segment.departure_airport.name} → {segment.arrival_airport.name}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Date: {segment.date} • Duration: {Math.floor(segment.duration / 60)}h {segment.duration % 60}m
+                            Date: {segment.date}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Duration: {Math.floor(segment.duration / 60)}h {segment.duration % 60}m
                           </p>
                         </div>
                         <div className="text-right">
@@ -232,14 +337,18 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
                 <button
                   onClick={() => {
                     setSelectedFlight(pkg);
-                    setBookingStep("details");
+                    setBookingStep("loading-ai");
+                    // Show loading for 1 second
+                    setTimeout(() => {
+                      setBookingStep("provide-info");
+                    }, 1000);
                   }}
                   className="w-full text-sm text-accent hover:underline"
                 >
                   Book with AI
                 </button>
               </div>
-            ))}
+            )})}
           </div>
         )}
 
@@ -253,10 +362,14 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
                 className="border border-border rounded-lg p-4 bg-background flex justify-between items-center"
               >
                 <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-3 mb-1">
                       <p className="font-semibold text-foreground">Flight Option {index + 1}</p>
                       {flight.cabin && (
-                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                        <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${
+                          flight.cabin === "Business" 
+                            ? "bg-purple-500 text-white" 
+                            : "bg-green-500 text-white"
+                        }`}>
                           {flight.cabin}
                         </span>
                       )}
@@ -275,7 +388,11 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
                     <button
                       onClick={() => {
                         setSelectedFlight(flight);
-                        setBookingStep("details");
+                        setBookingStep("loading-ai");
+                        // Show loading for 1 second
+                        setTimeout(() => {
+                          setBookingStep("provide-info");
+                        }, 1000);
                       }}
                       className="text-sm text-accent hover:underline mt-1"
                     >

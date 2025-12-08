@@ -11,6 +11,7 @@ interface LocationInputProps {
   onChange: (location: Location | null) => void
   placeholder?: string
   required?: boolean
+  className?: string
 }
 
 export default function LocationInput({
@@ -18,6 +19,7 @@ export default function LocationInput({
   onChange,
   placeholder = "Search for a city...",
   required = false,
+  className = "",
 }: LocationInputProps) {
   const [query, setQuery] = useState(value ? formatLocation(value) : "")
   const [suggestions, setSuggestions] = useState<Location[]>([])
@@ -103,6 +105,7 @@ export default function LocationInput({
         placeholder={placeholder}
         required={required}
         autoComplete="off"
+        className={`bg-white text-gray-900 ${className}`}
       />
       {showSuggestions && suggestions.length > 0 && (
         <div

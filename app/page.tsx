@@ -25,8 +25,23 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
-      <TripForm onSubmit={handleTripSubmit} />
+    <main className="min-h-screen relative">
+      {/* Background Image with Overlay */}
+      <div 
+        className="fixed inset-0 z-0"
+        style={{
+          backgroundImage: "url('https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=1920&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "blur(8px)",
+        }}
+      />
+      <div className="fixed inset-0 z-0 bg-black/30" />
+      
+      {/* Content */}
+      <div className="relative z-10">
+        <TripForm onSubmit={handleTripSubmit} />
+      </div>
     </main>
   )
 }

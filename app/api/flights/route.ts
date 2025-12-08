@@ -58,169 +58,170 @@ export async function POST(request: NextRequest) {
 
       // Hardcoded return flight packages for demo (Auckland ↔ Tokyo, 4 travelers)
       // Prices are total for 4 travelers
+      const packages = [
+        {
+          cabin: "Economy",
+          segments: [
+            {
+              from: originFormatted,
+              to: destinationsFormatted[0],
+              airline: "Air New Zealand",
+              flightNumber: "NZ89",
+              date: startDate, // Dec 18, 2025
+              departure_time: "10:05",
+              arrival_time: "18:30",
+              price: 1300, // Outbound price for 4 travelers
+              duration: 675, // 11h 15m in minutes
+              departure_airport: { name: `${originAirportName} (${originAirportCode})` },
+              arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
+            },
+            {
+              from: destinationsFormatted[0],
+              to: originFormatted,
+              airline: "Air New Zealand",
+              flightNumber: "NZ90",
+              date: endDate, // Dec 28, 2025
+              departure_time: "20:15",
+              arrival_time: "10:30",
+              price: 1200, // Return price for 4 travelers
+              duration: 675, // 11h 15m in minutes
+              departure_airport: { name: `${destAirportName} (${destAirportCode})` },
+              arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
+            },
+          ],
+        },
+        {
+          cabin: "Economy",
+          segments: [
+            {
+              from: originFormatted,
+              to: destinationsFormatted[0],
+              airline: "Qantas",
+              flightNumber: "QF25",
+              date: startDate,
+              departure_time: "14:20",
+              arrival_time: "22:35",
+              price: 1400,
+              duration: 675,
+              departure_airport: { name: `${originAirportName} (${originAirportCode})` },
+              arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
+            },
+            {
+              from: destinationsFormatted[0],
+              to: originFormatted,
+              airline: "Qantas",
+              flightNumber: "QF26",
+              date: endDate,
+              departure_time: "23:45",
+              arrival_time: "14:00",
+              price: 1300,
+              duration: 675,
+              departure_airport: { name: `${destAirportName} (${destAirportCode})` },
+              arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
+            },
+          ],
+        },
+        {
+          cabin: "Economy",
+          segments: [
+            {
+              from: originFormatted,
+              to: destinationsFormatted[0],
+              airline: "Japan Airlines",
+              flightNumber: "JL60",
+              date: startDate,
+              departure_time: "08:30",
+              arrival_time: "16:45",
+              price: 1500,
+              duration: 675,
+              departure_airport: { name: `${originAirportName} (${originAirportCode})` },
+              arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
+            },
+            {
+              from: destinationsFormatted[0],
+              to: originFormatted,
+              airline: "Japan Airlines",
+              flightNumber: "JL61",
+              date: endDate,
+              departure_time: "17:00",
+              arrival_time: "07:15",
+              price: 1400,
+              duration: 675,
+              departure_airport: { name: `${destAirportName} (${destAirportCode})` },
+              arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
+            },
+          ],
+        },
+        {
+          cabin: "Business",
+          segments: [
+            {
+              from: originFormatted,
+              to: destinationsFormatted[0],
+              airline: "Air New Zealand",
+              flightNumber: "NZ89",
+              date: startDate,
+              departure_time: "10:05",
+              arrival_time: "18:30",
+              price: 3000,
+              duration: 675,
+              departure_airport: { name: `${originAirportName} (${originAirportCode})` },
+              arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
+            },
+            {
+              from: destinationsFormatted[0],
+              to: originFormatted,
+              airline: "Air New Zealand",
+              flightNumber: "NZ90",
+              date: endDate,
+              departure_time: "20:15",
+              arrival_time: "10:30",
+              price: 2800,
+              duration: 675,
+              departure_airport: { name: `${destAirportName} (${destAirportCode})` },
+              arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
+            },
+          ],
+        },
+        {
+          cabin: "Economy",
+          segments: [
+            {
+              from: originFormatted,
+              to: destinationsFormatted[0],
+              airline: "Singapore Airlines",
+              flightNumber: "SQ285",
+              date: startDate,
+              departure_time: "12:00",
+              arrival_time: "20:15",
+              price: 1500,
+              duration: 675,
+              departure_airport: { name: `${originAirportName} (${originAirportCode})` },
+              arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
+            },
+            {
+              from: destinationsFormatted[0],
+              to: originFormatted,
+              airline: "Singapore Airlines",
+              flightNumber: "SQ286",
+              date: endDate,
+              departure_time: "21:30",
+              arrival_time: "11:45",
+              price: 1500,
+              duration: 675,
+              departure_airport: { name: `${destAirportName} (${destAirportCode})` },
+              arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
+            },
+          ],
+        },
+      ]
+
+      // Calculate total price for each package (sum of segment prices)
       const hardcodedPackages = {
-        packages: [
-          {
-            price: 2400, // $600 per person × 4
-            cabin: "Economy",
-            segments: [
-              {
-                from: originFormatted,
-                to: destinationsFormatted[0],
-                airline: "Air New Zealand",
-                flightNumber: "NZ89",
-                date: startDate, // Dec 18, 2025
-                departure_time: "10:05",
-                arrival_time: "18:30",
-                price: 1300, // Outbound price for 4 travelers
-                duration: 675, // 11h 15m in minutes
-                departure_airport: { name: `${originAirportName} (${originAirportCode})` },
-                arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
-              },
-              {
-                from: destinationsFormatted[0],
-                to: originFormatted,
-                airline: "Air New Zealand",
-                flightNumber: "NZ90",
-                date: endDate, // Dec 28, 2025
-                departure_time: "20:15",
-                arrival_time: "10:30",
-                price: 1200, // Return price for 4 travelers
-                duration: 675, // 11h 15m in minutes
-                departure_airport: { name: `${destAirportName} (${destAirportCode})` },
-                arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
-              },
-            ],
-          },
-          {
-            price: 2600, // $650 per person × 4
-            cabin: "Economy",
-            segments: [
-              {
-                from: originFormatted,
-                to: destinationsFormatted[0],
-                airline: "Qantas",
-                flightNumber: "QF25",
-                date: startDate,
-                departure_time: "14:20",
-                arrival_time: "22:35",
-                price: 1400,
-                duration: 675,
-                departure_airport: { name: `${originAirportName} (${originAirportCode})` },
-                arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
-              },
-              {
-                from: destinationsFormatted[0],
-                to: originFormatted,
-                airline: "Qantas",
-                flightNumber: "QF26",
-                date: endDate,
-                departure_time: "23:45",
-                arrival_time: "14:00",
-                price: 1300,
-                duration: 675,
-                departure_airport: { name: `${destAirportName} (${destAirportCode})` },
-                arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
-              },
-            ],
-          },
-          {
-            price: 2800, // $700 per person × 4
-            cabin: "Economy",
-            segments: [
-              {
-                from: originFormatted,
-                to: destinationsFormatted[0],
-                airline: "Japan Airlines",
-                flightNumber: "JL60",
-                date: startDate,
-                departure_time: "08:30",
-                arrival_time: "16:45",
-                price: 1500,
-                duration: 675,
-                departure_airport: { name: `${originAirportName} (${originAirportCode})` },
-                arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
-              },
-              {
-                from: destinationsFormatted[0],
-                to: originFormatted,
-                airline: "Japan Airlines",
-                flightNumber: "JL61",
-                date: endDate,
-                departure_time: "17:00",
-                arrival_time: "07:15",
-                price: 1400,
-                duration: 675,
-                departure_airport: { name: `${destAirportName} (${destAirportCode})` },
-                arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
-              },
-            ],
-          },
-          {
-            price: 5600, // $1400 per person × 4 (Business class)
-            cabin: "Business",
-            segments: [
-              {
-                from: originFormatted,
-                to: destinationsFormatted[0],
-                airline: "Air New Zealand",
-                flightNumber: "NZ89",
-                date: startDate,
-                departure_time: "10:05",
-                arrival_time: "18:30",
-                price: 3000,
-                duration: 675,
-                departure_airport: { name: `${originAirportName} (${originAirportCode})` },
-                arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
-              },
-              {
-                from: destinationsFormatted[0],
-                to: originFormatted,
-                airline: "Air New Zealand",
-                flightNumber: "NZ90",
-                date: endDate,
-                departure_time: "20:15",
-                arrival_time: "10:30",
-                price: 2800,
-                duration: 675,
-                departure_airport: { name: `${destAirportName} (${destAirportCode})` },
-                arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
-              },
-            ],
-          },
-          {
-            price: 3000, // $750 per person × 4
-            cabin: "Economy",
-            segments: [
-              {
-                from: originFormatted,
-                to: destinationsFormatted[0],
-                airline: "Singapore Airlines",
-                flightNumber: "SQ285",
-                date: startDate,
-                departure_time: "12:00",
-                arrival_time: "20:15",
-                price: 1500,
-                duration: 675,
-                departure_airport: { name: `${originAirportName} (${originAirportCode})` },
-                arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
-              },
-              {
-                from: destinationsFormatted[0],
-                to: originFormatted,
-                airline: "Singapore Airlines",
-                flightNumber: "SQ286",
-                date: endDate,
-                departure_time: "21:30",
-                arrival_time: "11:45",
-                price: 1500,
-                duration: 675,
-                departure_airport: { name: `${destAirportName} (${destAirportCode})` },
-                arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
-              },
-            ],
-          },
-        ],
+        packages: packages.map((pkg) => ({
+          ...pkg,
+          price: pkg.segments.reduce((sum, seg) => sum + seg.price, 0),
+        })),
       }
 
       return NextResponse.json(hardcodedPackages)
