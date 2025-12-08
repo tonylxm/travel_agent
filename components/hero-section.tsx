@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import Header from "@/components/header"
 
 export default function HeroSection() {
   return (
@@ -16,9 +15,6 @@ export default function HeroSection() {
       >
         <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/40" />
       </div>
-
-      {/* Header - Positioned at top */}
-      <Header />
 
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col justify-center px-4 py-20 sm:py-28">

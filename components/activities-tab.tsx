@@ -239,7 +239,7 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
           <div className="flex items-start gap-2">
             <Info className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
               <div>
-              <p className="text-sm font-medium text-foreground mb-1">Assumptions Made</p>
+              <p className="text-sm font-medium text-foreground mb-1">Notes</p>
               <ul className="text-sm text-muted-foreground space-y-1">
                 {activitiesData.assumptions.map((assumption, idx) => (
                   <li key={idx}>• {assumption}</li>

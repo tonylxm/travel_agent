@@ -12,23 +12,20 @@ interface BookingDetailsProps {
 export default function BookingDetails({ onBack, onViewItinerary }: BookingDetailsProps) {
   const { bookingRef, userInfo, selectedFlight } = useBooking()
 
-  // Hardcoded flight details (matching what we used in booking form)
-  const flightDetails = {
-    airline: "Air New Zealand",
-    flightNumber: "NZ89",
-    departureAirport: "Auckland (AKL)",
-    arrivalAirport: "Tokyo (NRT)",
-    departureDate: "13 Jan 2025",
-    departureTime: "10:05",
-    arrivalDate: "14 Jan 2025",
-    arrivalTime: "18:30",
-    duration: "10h 25m",
-    cabin: "Economy",
-    price: selectedFlight?.price || 850,
-  }
+  // Extract flight details from selectedFlight
+  const isPackage = selectedFlight?.segments && selectedFlight.segments.length > 0
+  const cabin = selectedFlight?.cabin || "Economy"
+  const totalPrice = selectedFlight?.price || 0
 
   // Calculate total with currency conversion (NZD)
-  const totalPriceNZD = (flightDetails.price * 1.5).toFixed(2) // Rough conversion
+  const totalPriceNZD = (totalPrice * 1.5).toFixed(2) // Rough conversion
+
+  // Helper function to format duration
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    return `${hours}h ${mins}m`
+  }
 
   return (
     <div className="space-y-6">
@@ -62,33 +59,79 @@ export default function BookingDetails({ onBack, onViewItinerary }: BookingDetai
         {/* Flight Information */}
         <div className="border border-border rounded-lg p-6 bg-card space-y-4">
           <h2 className="text-xl font-semibold text-foreground">Flight</h2>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Plane className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-foreground">
-                {flightDetails.airline} {flightDetails.flightNumber}
-              </span>
-            </div>
-            <div className="space-y-1">
-              <p className="text-foreground">
-                {flightDetails.departureAirport} → {flightDetails.arrivalAirport}
-              </p>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    {flightDetails.departureDate} — {flightDetails.departureTime} → {flightDetails.arrivalTime}
-                  </span>
+          <div className="space-y-4">
+            {isPackage && selectedFlight.segments ? (
+              // Package with multiple segments
+              selectedFlight.segments.map((segment: any, idx: number) => (
+                <div key={idx} className={idx > 0 ? "pt-4 border-t border-border" : ""}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Plane className="h-5 w-5 text-primary" />
+                    <span className="font-semibold text-foreground">
+                      {segment.airline || "Airline"} {segment.flightNumber || "N/A"}
+                    </span>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                      {cabin}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-foreground">
+                      {segment.departure_airport?.name || segment.from || "N/A"} → {segment.arrival_airport?.name || segment.to || "N/A"}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          {segment.date || "N/A"} — {segment.departure_time || "N/A"} → {segment.arrival_time || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        <span>Duration: {formatDuration(segment.duration || 0)}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  <span>Duration: {flightDetails.duration}</span>
+              ))
+            ) : selectedFlight?.flights && selectedFlight.flights.length > 0 ? (
+              // Single destination with flights array
+              selectedFlight.flights.map((flight: any, idx: number) => (
+                <div key={idx} className={idx > 0 ? "pt-4 border-t border-border" : ""}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Plane className="h-5 w-5 text-primary" />
+                    <span className="font-semibold text-foreground">
+                      {flight.airline || "Airline"} {flight.flightNumber || "N/A"}
+                    </span>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                      {cabin}
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-foreground">
+                      {flight.departure_airport?.name || "N/A"} → {flight.arrival_airport?.name || "N/A"}
+                    </p>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        <span>
+                          {flight.departure_date || "N/A"} — {flight.departure_time || "N/A"} → {flight.arrival_time || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        <span>Duration: {formatDuration(flight.duration || 0)}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <p className="text-sm text-muted-foreground">Cabin: {flightDetails.cabin}</p>
-            </div>
+              ))
+            ) : (
+              // Fallback if no flight data
+              <div className="text-muted-foreground">No flight details available</div>
+            )}
           </div>
         </div>
       </div>

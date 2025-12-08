@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       segments.push({ from: destinations[i], to: destinations[i + 1] })
     }
 
-    // If single destination, generate individual flights (not packages)
+    // If single destination, generate return flight packages (outbound + return)
     if (destinations.length === 1) {
       const originLoc = typeof origin === "object" ? origin : null
       const destLoc = typeof destinations[0] === "object" ? destinations[0] : null
@@ -56,125 +56,174 @@ export async function POST(request: NextRequest) {
       const destAirportName = destLoc.airportName
       const destAirportCode = destLoc.airportCode
 
-      const userPrompt = `You MUST output valid JSON only, conforming exactly to the schema at the end of this prompt.
-
-Generate 4-5 realistic DIRECT flight options (no connecting flights) for:
-- From: ${originFormatted} (Airport: ${originAirportName} - Code: ${originAirportCode})
-- To: ${destinationsFormatted[0]} (Airport: ${destAirportName} - Code: ${destAirportCode})
-- Departure Date: ${startDate}
-- Number of Travelers: ${travelers}
-
-CRITICAL REQUIREMENT - USE EXACT AIRPORT NAMES FROM DATABASE:
-- Departure airport: You MUST use exactly "${originAirportName} (${originAirportCode})"
-- Arrival airport: You MUST use exactly "${destAirportName} (${destAirportCode})"
-
-Generate 4-5 realistic DIRECT flight options with:
-- Different prices (vary by $50-200)
-- Realistic flight durations in minutes (based on distance)
-- All flights must be DIRECT (no connecting flights)
-- Use EXACTLY the airport names provided above
-- IMPORTANT: Include 1 business class option (significantly more expensive, typically 2-3x economy price)
-- Generate realistic airline names and flight numbers (e.g., "Air New Zealand NZ89", "Qantas QF25")
-- Generate realistic departure and arrival times (format: "HH:MM" in 24-hour format)
-- Generate realistic dates (may be slightly earlier than ${startDate} if needed)
-
---- JSON SCHEMA (required) ---
-{
-  "flights": [
-    {
-      "price": number,
-      "cabin": "Economy" | "Business",
-      "flights": [
-        {
-          "airline": string,
-          "flightNumber": string,
-          "departure_airport": {
-            "name": string
-          },
-          "arrival_airport": {
-            "name": string
-          },
-          "departure_date": string,
-          "departure_time": string,
-          "arrival_date": string,
-          "arrival_time": string,
-          "duration": number
-        }
-      ]
-    }
-  ]
-}
-
-Each flight option should have exactly 1 segment (direct flight).`
-
-      const apiKey = process.env.OPENAI_API_KEY
-      if (!apiKey) {
-        return NextResponse.json({
-          flights: [
-            {
-              price: 850,
-              cabin: "Economy",
-              flights: [
-                {
-                  airline: "Air New Zealand",
-                  flightNumber: "NZ89",
-                  departure_airport: { name: `${originAirportName} (${originAirportCode})` },
-                  arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
-                  departure_date: startDate,
-                  departure_time: "10:05",
-                  arrival_date: startDate,
-                  arrival_time: "18:30",
-                  duration: 840,
-                },
-              ],
-            },
-          ],
-        })
-      }
-
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
+      // Hardcoded return flight packages for demo (Auckland ↔ Tokyo, 4 travelers)
+      // Prices are total for 4 travelers
+      const hardcodedPackages = {
+        packages: [
           {
-            role: "system",
-            content:
-              "You are a flight search expert. You MUST respond with valid JSON only, no markdown, no explanations, just the raw JSON object. CRITICALLY: When airport names are provided from the database, you MUST use those exact names - do not modify, abbreviate, or use alternative names.",
+            price: 2400, // $600 per person × 4
+            cabin: "Economy",
+            segments: [
+              {
+                from: originFormatted,
+                to: destinationsFormatted[0],
+                airline: "Air New Zealand",
+                flightNumber: "NZ89",
+                date: startDate, // Dec 18, 2025
+                departure_time: "10:05",
+                arrival_time: "18:30",
+                price: 1300, // Outbound price for 4 travelers
+                duration: 675, // 11h 15m in minutes
+                departure_airport: { name: `${originAirportName} (${originAirportCode})` },
+                arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
+              },
+              {
+                from: destinationsFormatted[0],
+                to: originFormatted,
+                airline: "Air New Zealand",
+                flightNumber: "NZ90",
+                date: endDate, // Dec 28, 2025
+                departure_time: "20:15",
+                arrival_time: "10:30",
+                price: 1200, // Return price for 4 travelers
+                duration: 675, // 11h 15m in minutes
+                departure_airport: { name: `${destAirportName} (${destAirportCode})` },
+                arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
+              },
+            ],
           },
           {
-            role: "user",
-            content: userPrompt,
+            price: 2600, // $650 per person × 4
+            cabin: "Economy",
+            segments: [
+              {
+                from: originFormatted,
+                to: destinationsFormatted[0],
+                airline: "Qantas",
+                flightNumber: "QF25",
+                date: startDate,
+                departure_time: "14:20",
+                arrival_time: "22:35",
+                price: 1400,
+                duration: 675,
+                departure_airport: { name: `${originAirportName} (${originAirportCode})` },
+                arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
+              },
+              {
+                from: destinationsFormatted[0],
+                to: originFormatted,
+                airline: "Qantas",
+                flightNumber: "QF26",
+                date: endDate,
+                departure_time: "23:45",
+                arrival_time: "14:00",
+                price: 1300,
+                duration: 675,
+                departure_airport: { name: `${destAirportName} (${destAirportCode})` },
+                arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
+              },
+            ],
+          },
+          {
+            price: 2800, // $700 per person × 4
+            cabin: "Economy",
+            segments: [
+              {
+                from: originFormatted,
+                to: destinationsFormatted[0],
+                airline: "Japan Airlines",
+                flightNumber: "JL60",
+                date: startDate,
+                departure_time: "08:30",
+                arrival_time: "16:45",
+                price: 1500,
+                duration: 675,
+                departure_airport: { name: `${originAirportName} (${originAirportCode})` },
+                arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
+              },
+              {
+                from: destinationsFormatted[0],
+                to: originFormatted,
+                airline: "Japan Airlines",
+                flightNumber: "JL61",
+                date: endDate,
+                departure_time: "17:00",
+                arrival_time: "07:15",
+                price: 1400,
+                duration: 675,
+                departure_airport: { name: `${destAirportName} (${destAirportCode})` },
+                arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
+              },
+            ],
+          },
+          {
+            price: 5600, // $1400 per person × 4 (Business class)
+            cabin: "Business",
+            segments: [
+              {
+                from: originFormatted,
+                to: destinationsFormatted[0],
+                airline: "Air New Zealand",
+                flightNumber: "NZ89",
+                date: startDate,
+                departure_time: "10:05",
+                arrival_time: "18:30",
+                price: 3000,
+                duration: 675,
+                departure_airport: { name: `${originAirportName} (${originAirportCode})` },
+                arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
+              },
+              {
+                from: destinationsFormatted[0],
+                to: originFormatted,
+                airline: "Air New Zealand",
+                flightNumber: "NZ90",
+                date: endDate,
+                departure_time: "20:15",
+                arrival_time: "10:30",
+                price: 2800,
+                duration: 675,
+                departure_airport: { name: `${destAirportName} (${destAirportCode})` },
+                arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
+              },
+            ],
+          },
+          {
+            price: 3000, // $750 per person × 4
+            cabin: "Economy",
+            segments: [
+              {
+                from: originFormatted,
+                to: destinationsFormatted[0],
+                airline: "Singapore Airlines",
+                flightNumber: "SQ285",
+                date: startDate,
+                departure_time: "12:00",
+                arrival_time: "20:15",
+                price: 1500,
+                duration: 675,
+                departure_airport: { name: `${originAirportName} (${originAirportCode})` },
+                arrival_airport: { name: `${destAirportName} (${destAirportCode})` },
+              },
+              {
+                from: destinationsFormatted[0],
+                to: originFormatted,
+                airline: "Singapore Airlines",
+                flightNumber: "SQ286",
+                date: endDate,
+                departure_time: "21:30",
+                arrival_time: "11:45",
+                price: 1500,
+                duration: 675,
+                departure_airport: { name: `${destAirportName} (${destAirportCode})` },
+                arrival_airport: { name: `${originAirportName} (${originAirportCode})` },
+              },
+            ],
           },
         ],
-        temperature: 0.7,
-        response_format: { type: "json_object" },
-      })
-
-      const content = completion.choices?.[0]?.message?.content
-      if (!content) {
-        return NextResponse.json({ error: "Failed to generate flights" }, { status: 500 })
       }
 
-      let flightsData
-      try {
-        flightsData = JSON.parse(content)
-      } catch (parseError) {
-        const jsonMatch = content.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || content.match(/\{[\s\S]*\}/)
-        if (jsonMatch) {
-          try {
-            flightsData = JSON.parse(jsonMatch[1] || jsonMatch[0])
-          } catch (e) {
-            return NextResponse.json({ error: "Failed to parse flight data" }, { status: 500 })
-          }
-        } else {
-          return NextResponse.json({ error: "Invalid response format" }, { status: 500 })
-        }
-      }
-
-      if (!flightsData.flights || !Array.isArray(flightsData.flights)) {
-        return NextResponse.json({ error: "Invalid flight data structure" }, { status: 500 })
-      }
-
-      return NextResponse.json(flightsData)
+      return NextResponse.json(hardcodedPackages)
     }
 
     // Multi-destination: Generate complete packages

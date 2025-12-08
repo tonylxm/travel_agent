@@ -22,6 +22,8 @@ interface HotelDetailsProps {
     extracted_price?: number
     amenities?: string[]
     free_cancellation?: boolean
+    rooms?: number
+    room_configuration?: string
   }
   tripData?: {
     startDate?: string
@@ -170,8 +172,13 @@ export default function HotelDetails({
             <div>
               <p className="text-2xl font-bold text-foreground mb-1">
                 {hotel.price || `$${hotel.extracted_price || "N/A"}`}
-                <span className="text-base font-normal text-muted-foreground">/night</span>
+                <span className="text-base font-normal text-muted-foreground">/night (2 rooms)</span>
               </p>
+              {hotel.room_configuration && (
+                <p className="text-xs text-muted-foreground mb-2 italic">
+                  {hotel.room_configuration}
+                </p>
+              )}
               {totalPrice && (
                 <p className="text-sm text-muted-foreground">
                   Total for {nights} {nights === 1 ? "night" : "nights"}:{" "}

@@ -74,18 +74,43 @@ export default function BookingForm({ tripData, onBack, onContinue }: BookingFor
     }
   }
 
-  // Hardcoded flight details (read-only at top)
-  const flightDetails = {
-    airline: "Air New Zealand",
-    flightNumber: "NZ89",
-    departureAirport: "Auckland (AKL)",
-    arrivalAirport: "Tokyo (NRT)",
-    departureDate: "2025-01-13",
-    departureTime: "10:05",
-    arrivalDate: "2025-01-14",
-    arrivalTime: "18:30",
-    duration: "10h 25m",
-    cabin: "Economy",
+  // Extract flight details from selectedFlight
+  const isPackage = selectedFlight?.segments && selectedFlight.segments.length > 0
+  const cabin = selectedFlight?.cabin || "Economy"
+  
+  // Get first flight/segment for display
+  let displayFlight: any = null
+  if (isPackage && selectedFlight?.segments?.[0]) {
+    displayFlight = selectedFlight.segments[0]
+  } else if (selectedFlight?.flights?.[0]) {
+    displayFlight = selectedFlight.flights[0]
+  }
+  
+  // Format flight details for display
+  const flightDetails = displayFlight ? {
+    airline: displayFlight.airline || "Airline",
+    flightNumber: displayFlight.flightNumber || "N/A",
+    departureAirport: displayFlight.departure_airport?.name || displayFlight.from || "N/A",
+    arrivalAirport: displayFlight.arrival_airport?.name || displayFlight.to || "N/A",
+    departureDate: displayFlight.date || displayFlight.departure_date || "N/A",
+    departureTime: displayFlight.departure_time || "N/A",
+    arrivalDate: displayFlight.date || displayFlight.arrival_date || "N/A",
+    arrivalTime: displayFlight.arrival_time || "N/A",
+    duration: displayFlight.duration 
+      ? `${Math.floor(displayFlight.duration / 60)}h ${displayFlight.duration % 60}m`
+      : "N/A",
+    cabin: cabin,
+  } : {
+    airline: "N/A",
+    flightNumber: "N/A",
+    departureAirport: "N/A",
+    arrivalAirport: "N/A",
+    departureDate: "N/A",
+    departureTime: "N/A",
+    arrivalDate: "N/A",
+    arrivalTime: "N/A",
+    duration: "N/A",
+    cabin: cabin,
   }
 
   return (

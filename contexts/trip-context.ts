@@ -46,6 +46,7 @@ interface TripData {
   endDate?: string
   budget?: number
   travelers?: number
+  tripCategory?: string
   interests?: string[]
   additionalInformation?: string
   itinerary?: string
@@ -54,6 +55,7 @@ interface TripData {
   departure_id?: string
   arrival_id?: string
   currency?: string
+  tripName?: string
 }
 
 interface TripContextType {

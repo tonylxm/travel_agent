@@ -5,10 +5,10 @@ import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import Header from "@/components/header"
 import Link from "next/link"
 import LocationInput from "@/components/location-input"
 import type { Location } from "@/lib/types/location"
+import { LOCATIONS_DATABASE } from "@/lib/data/locations"
 
 interface TripFormData {
   origin: Location | null
@@ -17,6 +17,7 @@ interface TripFormData {
   endDate: string
   budget: number
   travelers: number
+  tripCategory: string
   interests: string[]
   additionalInformation?: string
   itinerary?: string
@@ -43,6 +44,7 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
     endDate: "",
     budget: 5000,
     travelers: 1,
+    tripCategory: "",
     interests: [],
     additionalInformation: "",
   })
@@ -72,6 +74,23 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
     })
   }
 
+  const fillDemoData = () => {
+    const auckland = LOCATIONS_DATABASE.find((loc) => loc.city === "Auckland" && loc.country === "New Zealand")
+    const tokyo = LOCATIONS_DATABASE.find((loc) => loc.city === "Tokyo" && loc.country === "Japan")
+    
+    setFormData({
+      origin: auckland || null,
+      destinations: [tokyo || null],
+      startDate: "2025-12-18",
+      endDate: "2025-12-28",
+      budget: 8000,
+      travelers: 4,
+      tripCategory: "Family Holiday",
+      interests: interests.filter((i) => i !== "Beach"), // All interests except Beach
+      additionalInformation: "Mum's birthday is on the 23rd, we want to eat KFC for Christmas. My older sister is vegetarian, she doesn't mind us eating meat but we do want to make sure she always has something to eat.",
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -90,6 +109,13 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
 
       if (filteredDestinations.length === 0) {
         setError("Please enter at least one destination")
+        setIsLoading(false)
+        return
+      }
+
+      // Validate trip category
+      if (!formData.tripCategory) {
+        setError("Please select a trip type")
         setIsLoading(false)
         return
       }
@@ -129,12 +155,23 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
 
   return (
     <>
-      <Header />
       <main className="min-h-screen bg-background px-4 py-12">
         <div className="mx-auto max-w-2xl">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground">Plan Your Trip</h1>
-            <p className="mt-2 text-muted-foreground">Tell us about your ideal journey</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-foreground">Plan Your Trip</h1>
+                <p className="mt-2 text-muted-foreground">Tell us about your ideal journey</p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={fillDemoData}
+                className="text-sm"
+              >
+                Fill Demo Data
+              </Button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-8 rounded-lg border border-border bg-card p-8">
@@ -220,6 +257,24 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
                 onChange={(e) => setFormData({ ...formData, travelers: Number(e.target.value) })}
                 required
               />
+            </div>
+
+            {/* Trip Category */}
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-2">Type of Trip *</label>
+              <select
+                value={formData.tripCategory}
+                onChange={(e) => setFormData({ ...formData, tripCategory: e.target.value })}
+                required
+                className="w-full px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <option value="">Select trip type...</option>
+                <option value="Business Trip">Business Trip</option>
+                <option value="Family Holiday">Family Holiday</option>
+                <option value="Girls Trip">Girls Trip</option>
+                <option value="Boys Trip">Boys Trip</option>
+                <option value="Mixed Friend Group Trip">Mixed Friend Group Trip</option>
+              </select>
             </div>
 
             {/* Interests */}

@@ -74,19 +74,19 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
 
         // Now generate flights based on itinerary
         const flightsResponse = await fetch("/api/flights", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
             origin: tripData.origin,
             destinations: tripData.destinations,
             startDate: tripData.startDate,
             endDate: tripData.endDate,
             travelers: tripData.travelers || 1,
             itinerary,
-          }),
-        });
+        }),
+      });
 
         if (!flightsResponse.ok) {
           throw new Error("Failed to fetch flights");
@@ -166,17 +166,18 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
   const isMultiDestination = tripData?.destinations && tripData.destinations.length > 1;
   const packages = flightsData?.packages;
   const individualFlights = flightsData?.flights;
+  const hasPackages = packages && packages.length > 0;
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-foreground mb-4">
-          {isMultiDestination ? "Flight Packages" : "Flight Options"}
+          {hasPackages ? "Flight Packages" : "Flight Options"}
         </h2>
         {loading && <p className="text-muted-foreground mb-6">Loading flights...</p>}
         {error && <p className="text-destructive mb-6">{error}</p>}
 
-        {!loading && !error && isMultiDestination && packages && packages.length > 0 && (
+        {!loading && !error && hasPackages && (
           <div className="space-y-4">
             {packages.map((pkg: any, pkgIdx: number) => (
               <div
@@ -242,16 +243,16 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
           </div>
         )}
 
-        {!loading && !error && !isMultiDestination && individualFlights && individualFlights.length > 0 && (
-          <div className="space-y-3">
+        {!loading && !error && !hasPackages && individualFlights && individualFlights.length > 0 && (
+        <div className="space-y-3">
             {individualFlights.map((flight: any, index: number) => {
               const totalDuration = flight.flights.reduce((sum: number, f: any) => sum + f.duration, 0);
-              return (
-                <div
+            return (
+              <div
                   key={index}
-                  className="border border-border rounded-lg p-4 bg-background flex justify-between items-center"
-                >
-                  <div>
+                className="border border-border rounded-lg p-4 bg-background flex justify-between items-center"
+              >
+                <div>
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-semibold text-foreground">Flight Option {index + 1}</p>
                       {flight.cabin && (
@@ -267,9 +268,9 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
                     ))}
                     <p className="text-sm text-muted-foreground mt-1">
                       Total Duration: {Math.floor(totalDuration / 60)}h {totalDuration % 60}m
-                    </p>
-                  </div>
-                  <div className="text-right">
+                  </p>
+                </div>
+                <div className="text-right">
                     <p className="font-semibold text-primary text-lg">${flight.price}</p>
                     <button
                       onClick={() => {
@@ -281,10 +282,10 @@ export default function FlightsTab({ tripData }: { tripData: any }) {
                       Book with AI
                     </button>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
+        </div>
         )}
 
         {!loading && !error && !flightsData && (
