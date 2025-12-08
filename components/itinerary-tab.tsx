@@ -258,6 +258,7 @@ export default function ItineraryTab({ tripData }: { tripData: any }) {
           <div className="border border-border rounded-lg p-6 bg-card">
             <WeeklyOverview
               days={parsedItinerary.days}
+              startDate={tripData?.startDate}
               onActivityClick={setSelectedActivityId}
             />
           </div>

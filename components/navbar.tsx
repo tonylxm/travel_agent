@@ -17,7 +17,6 @@ export default function Navbar() {
     if (pathname === "/flights") return "flights"
     if (pathname === "/accommodation") return "accommodation"
     if (pathname === "/activities") return "activities"
-    if (pathname === "/summary") return "review"
     return null
   }
 
@@ -96,16 +95,6 @@ export default function Navbar() {
               }`}
             >
               Activities
-            </Link>
-            <Link
-              href="/summary"
-              className={`px-4 py-2 text-sm font-medium transition ${
-                activeTab === "review"
-                  ? "text-primary border-b-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Review and Checkout
             </Link>
           </nav>
 
