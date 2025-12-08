@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Loader2, AlertCircle, Filter, Info } from "lucide-react"
 import TripContext from "@/contexts/trip-context"
 
+import type { Location } from "@/lib/types/location"
+
 interface ActivitiesTabProps {
   tripData: {
-    origin?: string
-    destinations?: string[]
+    origin?: Location | string | null
+    destinations?: (Location | string)[]
     startDate?: string
     endDate?: string
     budget?: number
@@ -46,7 +48,12 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
       fetchActivities()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tripData?.destinations?.join(","), tripData?.startDate, tripData?.endDate, tripData?.budget])
+  }, [
+    tripData?.destinations?.map((d) => (typeof d === "object" ? `${d.city}, ${d.country}` : d)).join(","),
+    tripData?.startDate,
+    tripData?.endDate,
+    tripData?.budget,
+  ])
 
   const fetchActivities = async (forceRefresh = false) => {
     if (!tripData?.destinations || tripData.destinations.length === 0) {
@@ -232,15 +239,15 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
           <div className="flex items-start gap-2">
             <Info className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
               <div>
-              <p className="text-sm font-medium text-foreground mb-1">Assumptions Made</p>
+              <p className="text-sm font-medium text-foreground mb-1">Notes</p>
               <ul className="text-sm text-muted-foreground space-y-1">
                 {activitiesData.assumptions.map((assumption, idx) => (
                   <li key={idx}>• {assumption}</li>
                 ))}
               </ul>
+              </div>
+              </div>
             </div>
-          </div>
-        </div>
       )}
 
       {/* Filters and Sort */}
@@ -315,7 +322,7 @@ export default function ActivitiesTab({ tripData }: ActivitiesTabProps) {
           >
             Clear Filters
           </Button>
-        </div>
+      </div>
       )}
     </div>
   )

@@ -1,9 +1,12 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { formatLocationForDisplay, formatLocationsForDisplay } from "@/lib/utils/format-location"
 
 export default function SummaryTab({ tripData }: { tripData: any }) {
   const estimatedTotal = tripData?.budget || 5000
+  const originFormatted = formatLocationForDisplay(tripData?.origin)
+  const destinationsFormatted = formatLocationsForDisplay(tripData?.destinations)
 
   return (
     <div className="space-y-6">
@@ -17,7 +20,7 @@ export default function SummaryTab({ tripData }: { tripData: any }) {
           <div className="rounded-lg bg-background p-4 border border-border">
             <p className="text-sm text-muted-foreground">Route</p>
             <p className="font-semibold text-foreground">
-              {tripData?.origin} → {tripData?.destinations?.join(" → ")}
+              {originFormatted} → {destinationsFormatted.join(" → ")}
             </p>
           </div>
           <div className="rounded-lg bg-background p-4 border border-border">
@@ -58,17 +61,6 @@ export default function SummaryTab({ tripData }: { tripData: any }) {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Ready to Book */}
-      <div className="rounded-lg bg-accent/10 border border-accent/20 p-6 text-center">
-        <h3 className="font-semibold text-foreground mb-2">Ready to Book?</h3>
-        <p className="text-muted-foreground mb-4">
-          All your travel plans are ready. Proceed to checkout to finalize your booking.
-        </p>
-        <Button className="w-full sm:w-auto" size="lg">
-          Proceed to Checkout
-        </Button>
       </div>
     </div>
   )

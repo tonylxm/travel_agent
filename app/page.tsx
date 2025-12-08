@@ -1,16 +1,32 @@
 "use client"
-import Header from "@/components/header"
-import HeroSection from "@/components/hero-section"
-import FeaturesGrid from "@/components/features-grid"
-import CTASection from "@/components/cta-section"
+
+import { useRouter } from "next/navigation"
+import { useContext } from "react"
+import TripForm from "@/components/trip-form"
+import TripContext from "@/contexts/trip-context"
+import { getAirportCode } from "@/lib/utils/location"
 
 export default function Home() {
+  const router = useRouter()
+  const { setTripData } = useContext(TripContext)
+
+  const handleTripSubmit = async (data: any) => {
+    const originCode = data.origin ? getAirportCode(data.origin) : null
+    const arrivalCode = data.destinations?.[0] ? getAirportCode(data.destinations[0]) : null
+
+    data.arrival_id = arrivalCode
+    data.departure_id = originCode
+    data.currency = "USD"
+    data.tripName = "Tokyo Winter Wonderland" // Initialize with default trip name
+
+    setTripData(data)
+    // Redirect to itinerary tab after trip is created
+    router.push("/itinerary")
+  }
+
   return (
     <main className="min-h-screen bg-background">
-      <Header />
-      <HeroSection />
-      <FeaturesGrid />
-      <CTASection />
+      <TripForm onSubmit={handleTripSubmit} />
     </main>
   )
 }

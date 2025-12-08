@@ -1,197 +1,295 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useBooking } from "@/contexts/booking-context";
+import FlightDetails from "@/components/flight-details";
+import BookingForm from "@/components/booking-form";
+import MockCheckout from "@/components/mock-checkout";
+import BookingSuccess from "@/components/booking-success";
+import BookingDetails from "@/components/booking-details";
+import { formatLocationForDisplay } from "@/lib/utils/format-location";
+import TripContext from "@/contexts/trip-context";
+import { useContext } from "react";
+
+type BookingStep = "list" | "details" | "form" | "checkout" | "success" | "booking-details";
 
 export default function FlightsTab({ tripData }: { tripData: any }) {
-  // Hardcoded mock data matching Google Flights/Serp API structure
-  const mockFlights = [
-    {
-      price: 850,
-      flights: [
-        {
-          departure_airport: { name: "Sydney Kingsford Smith Airport (SYD)" },
-          arrival_airport: { name: "Los Angeles International Airport (LAX)" },
-          duration: 840, // 14 hours in minutes
-        },
-      ],
-    },
-    {
-      price: 920,
-      flights: [
-        {
-          departure_airport: { name: "Sydney Kingsford Smith Airport (SYD)" },
-          arrival_airport: { name: "San Francisco International Airport (SFO)" },
-          duration: 780, // 13 hours in minutes
-        },
-        {
-          departure_airport: { name: "San Francisco International Airport (SFO)" },
-          arrival_airport: { name: "Los Angeles International Airport (LAX)" },
-          duration: 90, // 1.5 hours in minutes
-        },
-      ],
-    },
-    {
-      price: 780,
-      flights: [
-        {
-          departure_airport: { name: "Sydney Kingsford Smith Airport (SYD)" },
-          arrival_airport: { name: "Auckland Airport (AKL)" },
-          duration: 180, // 3 hours in minutes
-        },
-        {
-          departure_airport: { name: "Auckland Airport (AKL)" },
-          arrival_airport: { name: "Los Angeles International Airport (LAX)" },
-          duration: 720, // 12 hours in minutes
-        },
-      ],
-    },
-    {
-      price: 1050,
-      flights: [
-        {
-          departure_airport: { name: "Sydney Kingsford Smith Airport (SYD)" },
-          arrival_airport: { name: "Los Angeles International Airport (LAX)" },
-          duration: 840, // 14 hours in minutes
-        },
-      ],
-    },
-    {
-      price: 950,
-      flights: [
-        {
-          departure_airport: { name: "Sydney Kingsford Smith Airport (SYD)" },
-          arrival_airport: { name: "Dubai International Airport (DXB)" },
-          duration: 900, // 15 hours in minutes
-        },
-        {
-          departure_airport: { name: "Dubai International Airport (DXB)" },
-          arrival_airport: { name: "Los Angeles International Airport (LAX)" },
-          duration: 1020, // 17 hours in minutes
-        },
-      ],
-    },
-  ];
-
-  const [flights, setFlights] = useState<any[]>(mockFlights);
+  const { setSelectedFlight } = useBooking();
+  const { setTripData } = useContext(TripContext);
+  const [bookingStep, setBookingStep] = useState<BookingStep>("list");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Commented out API call - using hardcoded data for now
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     // Sydney Australia
-  //     // Tokyo Japan
-  //     if (!tripData?.departure_id || !tripData?.arrival_id) {
-  //       setError(
-  //         `Missing airport codes. Origin: ${tripData?.departure_id || "not found"}, Destination: ${tripData?.arrival_id || "not found"}. Please check that your city names are in the format "City Country" (e.g., "Sydney Australia").`
-  //       );
-  //       return;
-  //     }
+  // Fetch flights (with caching)
+  useEffect(() => {
+    const fetchFlights = async () => {
+      if (!tripData?.origin || !tripData?.destinations || tripData.destinations.length === 0) {
+        return;
+      }
 
-  //     setLoading(true);
-  //     setError(null);
+      // Check if flights are already cached
+      if (tripData.flights) {
+        return;
+      }
 
-  //     try {
-  //       const { departure_id, arrival_id, startDate, endDate, currency } = tripData;
+      setLoading(true);
+      setError(null);
 
-  //       const res = await fetch("http://localhost:3001/flights", {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //         body: JSON.stringify({
-  //           departure_id: departure_id,
-  //           arrival_id: arrival_id,
-  //           outbound_date: startDate,
-  //           return_date: endDate,
-  //           currency: currency,
-  //         }),
-  //       });
+      try {
+        // First, ensure we have itinerary
+        let itinerary = tripData.itinerary;
+        
+        if (!itinerary) {
+          // Fetch itinerary first
+          const itineraryResponse = await fetch("/api/generate-itinerary", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              origin: tripData.origin,
+              destinations: tripData.destinations,
+              startDate: tripData.startDate,
+              endDate: tripData.endDate,
+              budget: tripData.budget,
+              travelers: tripData.travelers,
+              interests: tripData.interests || [],
+              additionalInformation: tripData.additionalInformation,
+            }),
+          });
 
-  //       if (!res.ok) {
-  //         throw new Error("Failed to fetch flights");
-  //       }
+          if (!itineraryResponse.ok) {
+            throw new Error("Failed to fetch itinerary");
+          }
 
-  //       const data = await res.json();
-  //       setFlights(data?.data?.best_flights || []);
-  //     } catch (err) {
-  //       setError(err instanceof Error ? err.message : "An error occurred");
-  //       setFlights([]);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+          const itineraryData = await itineraryResponse.json();
+          itinerary = itineraryData.itinerary;
 
-  //   fetchData();
-  // }, [tripData?.departure_id, tripData?.arrival_id, tripData?.startDate, tripData?.endDate]);
+          // Cache itinerary in context
+          setTripData((prev: any) => ({
+            ...prev,
+            itinerary,
+          }));
+        }
+
+        // Now generate flights based on itinerary
+        const flightsResponse = await fetch("/api/flights", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            origin: tripData.origin,
+            destinations: tripData.destinations,
+            startDate: tripData.startDate,
+            endDate: tripData.endDate,
+            travelers: tripData.travelers || 1,
+            itinerary,
+        }),
+      });
+
+        if (!flightsResponse.ok) {
+          throw new Error("Failed to fetch flights");
+        }
+
+        const flightsData = await flightsResponse.json();
+
+        // Cache flights in context
+        setTripData((prev: any) => ({
+          ...prev,
+          flights: flightsData,
+        }));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFlights();
+  }, [tripData?.origin, tripData?.destinations, tripData?.startDate, tripData?.endDate, tripData?.flights, setTripData]);
+
+  // Render different steps of booking flow
+  if (bookingStep === "details") {
+    return (
+      <FlightDetails
+        tripData={tripData}
+        onBack={() => setBookingStep("list")}
+        onBookWithAI={() => setBookingStep("form")}
+      />
+    );
+  }
+
+  if (bookingStep === "form") {
+    return (
+      <BookingForm
+        tripData={tripData}
+        onBack={() => setBookingStep("details")}
+        onContinue={() => setBookingStep("checkout")}
+      />
+    );
+  }
+
+  if (bookingStep === "checkout") {
+    return (
+      <MockCheckout
+        onBack={() => setBookingStep("form")}
+        onPaymentSuccess={() => setBookingStep("success")}
+      />
+    );
+  }
+
+  if (bookingStep === "success") {
+    return (
+      <BookingSuccess
+        onViewDetails={() => setBookingStep("booking-details")}
+        onGoToItinerary={() => {
+          setBookingStep("list");
+        }}
+      />
+    );
+  }
+
+  if (bookingStep === "booking-details") {
+    return (
+      <BookingDetails
+        onBack={() => setBookingStep("success")}
+        onViewItinerary={() => {
+          setBookingStep("list");
+        }}
+      />
+    );
+  }
+
+  // Default: show flight list
+  const flightsData = tripData?.flights;
+  const isMultiDestination = tripData?.destinations && tripData.destinations.length > 1;
+  const packages = flightsData?.packages;
+  const individualFlights = flightsData?.flights;
+  const hasPackages = packages && packages.length > 0;
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-4">Flight Options</h2>
-        <p className="text-muted-foreground mb-6">
-          Outbound flights from {tripData?.origin} to {tripData?.destinations?.[0]}
-        </p>
+        <h2 className="text-xl font-semibold text-foreground mb-4">
+          {hasPackages ? "Flight Packages" : "Flight Options"}
+        </h2>
+        {loading && <p className="text-muted-foreground mb-6">Loading flights...</p>}
+        {error && <p className="text-destructive mb-6">{error}</p>}
 
-        {/* Loading and error states commented out for hardcoded data */}
-        {/* {loading && (
-          <div className="text-center py-8 text-muted-foreground">Loading flights...</div>
-        )}
+        {!loading && !error && hasPackages && (
+          <div className="space-y-4">
+            {packages.map((pkg: any, pkgIdx: number) => (
+              <div
+                key={pkgIdx}
+                className="border border-border rounded-lg p-6 bg-background"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        Package {pkgIdx + 1}
+                      </h3>
+                      {pkg.cabin && (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                          {pkg.cabin}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {pkg.segments.length} flight{pkg.segments.length > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-primary">${pkg.price}</p>
+                    <p className="text-xs text-muted-foreground">Total Package Price</p>
+                  </div>
+                </div>
 
-        {error && (
-          <div className="text-center py-8 text-destructive">
-            <p>{error}</p>
+                <div className="space-y-3 mb-4">
+                  {pkg.segments.map((segment: any, segIdx: number) => (
+                    <div key={segIdx} className="pl-4 border-l-2 border-primary/20">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            {segment.from} → {segment.to}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {segment.departure_airport.name} → {segment.arrival_airport.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Date: {segment.date} • Duration: {Math.floor(segment.duration / 60)}h {segment.duration % 60}m
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-foreground">${segment.price}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => {
+                    setSelectedFlight(pkg);
+                    setBookingStep("details");
+                  }}
+                  className="w-full text-sm text-accent hover:underline"
+                >
+                  Book with AI
+                </button>
+              </div>
+            ))}
           </div>
         )}
 
-        {!loading && !error && flights.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">No flights available</div>
-        )} */}
-
-        {flights.length > 0 && (
-          <div className="space-y-3">
-            {flights.map((flightPath, index) => {
-            let total_flight_time = 0;
+        {!loading && !error && !hasPackages && individualFlights && individualFlights.length > 0 && (
+        <div className="space-y-3">
+            {individualFlights.map((flight: any, index: number) => {
+              const totalDuration = flight.flights.reduce((sum: number, f: any) => sum + f.duration, 0);
             return (
               <div
-                key={Math.random()}
+                  key={index}
                 className="border border-border rounded-lg p-4 bg-background flex justify-between items-center"
               >
                 <div>
-                  <p className="font-semibold text-foreground">Flight Path {index + 1}</p>
-                  {flightPath.flights.map((flight: any) => {
-                    total_flight_time += flight.duration;
-                    return (
-                      <p key={Math.random()} className="text-sm text-muted-foreground">
-                        Departure: {flight.departure_airport.name} {"      ------>     "} Arrival:{" "}
-                        {flight.arrival_airport.name} Duration: {Math.floor(flight.duration / 60)}h{" "}
-                        {flight.duration % 60}m
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold text-foreground">Flight Option {index + 1}</p>
+                      {flight.cabin && (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-secondary/10 text-secondary-foreground">
+                          {flight.cabin}
+                        </span>
+                      )}
+                    </div>
+                    {flight.flights.map((f: any, flightIdx: number) => (
+                      <p key={flightIdx} className="text-sm text-muted-foreground">
+                        {f.departure_airport.name} → {f.arrival_airport.name} • Duration: {Math.floor(f.duration / 60)}h {f.duration % 60}m
                       </p>
-                    );
-                  })}
-                  <p>
-                    Total flight time Duration: {Math.floor(total_flight_time / 60)}h {total_flight_time % 60}m
+                    ))}
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Total Duration: {Math.floor(totalDuration / 60)}h {totalDuration % 60}m
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-primary text-lg">${flightPath.price}</p>
-                  <button className="text-sm text-accent hover:underline mt-1">Select</button>
-                </div>
+                    <p className="font-semibold text-primary text-lg">${flight.price}</p>
+                    <button
+                      onClick={() => {
+                        setSelectedFlight(flight);
+                        setBookingStep("details");
+                      }}
+                      className="text-sm text-accent hover:underline mt-1"
+                    >
+                      Book with AI
+                    </button>
+                  </div>
               </div>
             );
-            // return (
-            //   <div key={Math.random()} className="border-2 border-b">
-            //     {flightPath.flights.map((flight) => {
-            //       return (
-            //         <div key={Math.random()}>
-            //           {flight.departure_airport.name} =====D {flight.arrival_airport.name}
-            //         </div>
-            //       );
-            //     })}
-            //   </div>
-            // );
-            })}
-          </div>
+          })}
+        </div>
+        )}
+
+        {!loading && !error && !flightsData && (
+          <p className="text-muted-foreground">No flights available. Please check your trip details.</p>
         )}
       </div>
     </div>
