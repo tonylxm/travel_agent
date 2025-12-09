@@ -163,10 +163,10 @@ export default function TripForm({ onSubmit }: { onSubmit: (data: TripFormData) 
         <div className="flex-1 flex items-center justify-center mb-8">
           <div className="text-center space-y-4">
             <h1 className="text-5xl md:text-6xl font-bold text-white drop-shadow-lg">
-              Your next adventure, intelligently planned.
+              Your all-in-one space for planning your trip.
             </h1>
             <p className="text-xl md:text-2xl text-white/90 drop-shadow-md">
-              Tell us your dream trip, and let our AI craft the perfect itinerary for you.
+              No more switching between Excel, Booking.com and SkyScanner. It's all here with Obal.ai.
             </p>
           </div>
         </div>

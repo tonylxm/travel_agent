@@ -9,7 +9,7 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Travel Planner - Plan Your Journey",
+  title: "Obal.ai - All-In-One Travel Planner",
   description:
     "AI-powered travel planning. Build custom itineraries, book flights, accommodation, and activities all in one place.",
   generator: "v0.app",
